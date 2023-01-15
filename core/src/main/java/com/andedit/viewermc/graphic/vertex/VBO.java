@@ -1,7 +1,7 @@
 package com.andedit.viewermc.graphic.vertex;
 
+import static com.andedit.viewermc.graphic.vertex.VertBuf.buffer;
 import static com.badlogic.gdx.Gdx.gl;
-import static com.andedit.viewermc.util.Util.BUFFER;
 
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.utils.BufferUtils;
@@ -11,6 +11,7 @@ public class VBO implements Vertex {
 	
 	private int glDraw;
 	private int handle;
+	private int size;
 	private boolean isBound;
 	private final VertContext context;
 
@@ -23,12 +24,14 @@ public class VBO implements Vertex {
 
 	@Override
 	public void setVertices(float[] array, int size, int offset) {
-		BufferUtils.copy(array, BUFFER, size, offset);
+		buffer.clear();
+		this.size = size;
+		BufferUtils.copy(array, buffer, size, offset);
 		if (isBound) {
-			gl.glBufferData(GL20.GL_ARRAY_BUFFER, BUFFER.remaining(), BUFFER, glDraw);
+			gl.glBufferData(GL20.GL_ARRAY_BUFFER, buffer.remaining(), buffer, glDraw);
 		} else {
 			gl.glBindBuffer(GL20.GL_ARRAY_BUFFER, handle);
-			gl.glBufferData(GL20.GL_ARRAY_BUFFER, BUFFER.remaining(), BUFFER, glDraw);
+			gl.glBufferData(GL20.GL_ARRAY_BUFFER, buffer.remaining(), buffer, glDraw);
 			gl.glBindBuffer(GL20.GL_ARRAY_BUFFER, 0);
 		}
 	}
@@ -55,6 +58,11 @@ public class VBO implements Vertex {
 	@Override
 	public int getDraw() {
 		return glDraw;
+	}
+	
+	@Override
+	public int size() {
+		return size;
 	}
 	
 	@Override

@@ -41,9 +41,9 @@ public final class UIManager {
 		if (current != null) current.setVisible(false);
 		ui.setVisible(true);
 		current = ui;
-		if (ui.isInputLock())
-			main.addInputLock("ui");
-		else main.removeInputLock("ui");
+		//if (ui.isInputLock())
+		//	main.addInputLock("ui");
+		//else main.removeInputLock("ui");
 		input.set(ui.getInput());
 		return (T) ui;
 	}

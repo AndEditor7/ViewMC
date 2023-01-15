@@ -1,21 +1,21 @@
 package com.andedit.viewermc.graphic.vertex;
 
-import static com.andedit.viewermc.util.Util.BUFFER;
+import static com.andedit.viewermc.graphic.vertex.VertBuf.buffer;
 import static com.badlogic.gdx.Gdx.gl;
 import static com.badlogic.gdx.Gdx.gl30;
 
-import java.nio.Buffer;
 import java.nio.IntBuffer;
 
-import com.andedit.viewermc.graphic.QuadIndexBuffer;
+import com.andedit.viewermc.graphic.QuadIndex;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.utils.BufferUtils;
 
-/** Vertex Buffer Object with Vertex Array Object (VBO with VAO) */
+/** Vertex Buffer Object with Vertex Array Object (VBO with VAO)
+ *  Will always binds QuadIndex. */
 public class VAO implements Vertex {
 	private static final IntBuffer intBuf = BufferUtils.newIntBuffer(1);
 
-	private int glDraw;
+	private int glDraw, size;
 	private int handle, vao;
 	private boolean isBound;
 	
@@ -23,25 +23,26 @@ public class VAO implements Vertex {
 		handle = gl30.glGenBuffer();
 		this.glDraw = glDraw;
 		
-		((Buffer)intBuf).clear();
+		intBuf.clear();
 		gl30.glGenVertexArrays(1, intBuf);
 		vao = intBuf.get();
 		
 		gl30.glBindVertexArray(vao);
 		gl30.glBindBuffer(GL20.GL_ARRAY_BUFFER, handle);
-		QuadIndexBuffer.bind();
+		QuadIndex.bind();
 		context.setVertexAttributes(null);
 		gl30.glBindVertexArray(0);
 	}
 	
 	@Override
 	public void setVertices(float[] array, int size, int offset) {
-		BufferUtils.copy(array, BUFFER, size, offset);
+		this.size = size;
+		BufferUtils.copy(array, buffer, size, offset);
 		if (!isBound) {
 			gl30.glBindVertexArray(vao);
 		}
 		gl.glBindBuffer(GL20.GL_ARRAY_BUFFER, handle);
-		gl.glBufferData(GL20.GL_ARRAY_BUFFER, BUFFER.remaining(), BUFFER, glDraw);
+		gl.glBufferData(GL20.GL_ARRAY_BUFFER, buffer.remaining(), buffer, glDraw);
 		if (!isBound) {
 			gl30.glBindVertexArray(0);
 		}
@@ -68,12 +69,17 @@ public class VAO implements Vertex {
 	public int getDraw() {
 		return glDraw;
 	}
+	
+	@Override
+	public int size() {
+		return size;
+	}
 
 	@Override
 	public void dispose() {
-		((Buffer)intBuf).clear();
+		intBuf.clear();
 		intBuf.put(vao);
-		((Buffer)intBuf).flip();
+		intBuf.flip();
 		gl30.glDeleteVertexArrays(1, intBuf);
 		gl30.glDeleteBuffer(handle);
 	}

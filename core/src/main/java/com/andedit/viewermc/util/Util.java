@@ -1,6 +1,6 @@
 package com.andedit.viewermc.util;
 
-import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.function.Consumer;
 
 import com.badlogic.gdx.Application.ApplicationType;
@@ -10,14 +10,16 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Event;
 import com.badlogic.gdx.scenes.scene2d.EventListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
-import com.badlogic.gdx.utils.BufferUtils;
+import com.badlogic.gdx.utils.Null;
 
 public final class Util {
-	public static final ByteBuffer BUFFER = BufferUtils.newByteBuffer(1048576);
 
 	public static float lerp(float fromValue, float toValue, float progress, float clamp) {
 		final float delta = (toValue - fromValue) * progress;
@@ -80,6 +82,16 @@ public final class Util {
 		var.flip(x, y);
 		return var;
 	}
+	
+	public static long hashCode(int x, int y, int z) {
+        long l = (long)(x * 3129871) ^ (long)z * 116129781L ^ (long)y;
+        l = l * l * 42317861L + l * 11L;
+        return l >> 16;
+    }
+	
+	public static float hashFloat(int x, int y, int z) {
+		return Math.abs((int)(hashCode(x, y, z) & 65535)) / 65535f;
+	}
 
 	/** Create a new change listener using java 8 lambda. */
 	public static EventListener newListener(Consumer<Event> listener) {
@@ -97,5 +109,47 @@ public final class Util {
 				runnable.run();
 			}
 		};
+	}
+	
+	public static ArrayList<String> split(final String string, final char delimiter) {
+		var array = new ArrayList<String>((string.length() >> 1) + 1);
+		int i = 0;
+		int j = string.indexOf(delimiter, 0); // first substring
+
+		while (j >= 0) {
+			array.add(string.substring(i, j));
+			i = j + 1;
+			j = string.indexOf(delimiter, i); // rest of substrings
+		}
+
+		array.add(string.substring(i)); // last substring
+
+		return array;
+	}
+	
+	@Null
+	public static <T> T get(T[] array, int i) {
+		if (array == null || i < 0 || i >= array.length) {
+			return null;
+		}
+		return array[i];
+	}
+
+	public static void mul(BoundingBox box, Matrix4 transform) {
+		final float a = 0.5f;
+		final float x0 = box.min.x-a, y0 = box.min.y-a, z0 = box.min.z-a, x1 = box.max.x-a, y1 = box.max.y-a, z1 = box. max.z-a;
+		var vec = new Vector3();
+		box.inf();
+		box.ext(vec.set(x0, y0, z0).mul(transform));
+		box.ext(vec.set(x0, y0, z1).mul(transform));
+		box.ext(vec.set(x0, y1, z0).mul(transform));
+		box.ext(vec.set(x0, y1, z1).mul(transform));
+		box.ext(vec.set(x1, y0, z0).mul(transform));
+		box.ext(vec.set(x1, y0, z1).mul(transform));
+		box.ext(vec.set(x1, y1, z0).mul(transform));
+		box.ext(vec.set(x1, y1, z1).mul(transform));
+		box.min.add(a);
+		box.max.add(a);
+		box.update();
 	}
 }

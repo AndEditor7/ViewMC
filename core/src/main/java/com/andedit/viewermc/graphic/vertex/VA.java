@@ -10,6 +10,7 @@ import com.badlogic.gdx.utils.BufferUtils;
 public class VA implements Vertex {
 	final VertContext context;
 	final ByteBuffer buffer;
+	int size;
 	
 	VA(VertContext context, ByteBuffer buffer) {
 		this.context = context;
@@ -19,6 +20,7 @@ public class VA implements Vertex {
 	@Override
 	public void setVertices(float[] array, int size, int offset) {
 		BufferUtils.copy(array, buffer, size, offset);
+		this.size = size;
 	}
 
 	@Override
@@ -44,6 +46,11 @@ public class VA implements Vertex {
 	@Override
 	public int getDraw() {
 		return GL20.GL_DYNAMIC_DRAW;
+	}
+	
+	@Override
+	public int size() {
+		return size;
 	}
 
 	@Override

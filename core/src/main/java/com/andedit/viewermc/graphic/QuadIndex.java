@@ -3,13 +3,13 @@ package com.andedit.viewermc.graphic;
 import static com.badlogic.gdx.Gdx.gl;
 
 import java.nio.Buffer;
-import java.nio.ShortBuffer;
 
 import com.andedit.viewermc.util.Util;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.utils.BufferUtils;
 
 /** This QuadIndexBuffer intention to render meshes with "quads" instead of triangles. */
-public final class QuadIndexBuffer 
+public final class QuadIndex 
 {
 	public static final int maxIndex  = 98304 >> 1;
 	public static final int maxVertex = (maxIndex/6)*4;
@@ -19,7 +19,7 @@ public final class QuadIndexBuffer
 	/** Installation of the index buffer and upload it to the GPU. */
 	public static void init() {
 		// Temporally Short buffer.
-		final ShortBuffer buffer = Util.BUFFER.asShortBuffer();
+		var buffer = BufferUtils.newShortBuffer(maxIndex);
 		
 		// Indexing so it can reuse the same vertex to make up a quad.
 		for (int i = 0, v = 0; i < maxIndex; i += 6, v += 4) { 

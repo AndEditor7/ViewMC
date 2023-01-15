@@ -2,6 +2,7 @@ package com.andedit.viewermc.graphic;
 
 import static com.badlogic.gdx.graphics.GL20.GL_ELEMENT_ARRAY_BUFFER;
 
+import com.andedit.viewermc.graphic.vertex.VertBuf;
 import com.andedit.viewermc.graphic.vertex.VertContext;
 import com.andedit.viewermc.graphic.vertex.Vertex;
 import com.andedit.viewermc.util.Util;
@@ -67,7 +68,7 @@ public class FastBatch implements Batch {
 				new VertexAttribute(Usage.ColorPacked, 4, ShaderProgram.COLOR_ATTRIBUTE),
 				new VertexAttribute(Usage.TextureCoordinates, 2, ShaderProgram.TEXCOORD_ATTRIBUTE + "0"));
 		shader = SpriteBatch.createDefaultShader();
-		vertex = Vertex.newVa(VertContext.of(shader, attributes), Util.BUFFER);
+		vertex = Vertex.newVa(VertContext.of(shader, attributes), VertBuf.buffer);
 		projectionMatrix.setToOrtho2D(0, 0, Util.getW(), Util.getH());
 		vertices = new float[1000 * SPRITE_SIZE];
 	}
@@ -82,7 +83,7 @@ public class FastBatch implements Batch {
 		shader.bind();
 		setupMatrices();
 		vertex.bind();
-		QuadIndexBuffer.preBind();
+		QuadIndex.preBind();
 
 		drawing = true;
 	}
