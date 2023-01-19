@@ -4,14 +4,14 @@ public final class Identifier {
 	public final String name, path, full;
 	
 	public Identifier(String string) {
-		var array = string.split(":");
-		if (array.length == 1) {
+		var array = Util.split(string, ':');
+		if (array.size() == 1) {
 			name = "minecraft";
 			path = string;
 			full = name + ':' + string;
 		} else {
-			name = array[0];
-			path = array[1];
+			name = array.get(0);
+			path = array.get(1);
 			full = string;
 		}
 	}

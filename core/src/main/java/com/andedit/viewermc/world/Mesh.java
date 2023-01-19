@@ -3,9 +3,12 @@ package com.andedit.viewermc.world;
 import static com.badlogic.gdx.Gdx.gl;
 
 import java.util.ArrayList;
+import java.util.EnumMap;
 
 import com.andedit.viewermc.graphic.MeshBuilder;
+import com.andedit.viewermc.graphic.MeshProvider;
 import com.andedit.viewermc.graphic.MeshVert;
+import com.andedit.viewermc.graphic.RenderLayer;
 import com.andedit.viewermc.graphic.VertConsumer;
 import com.andedit.viewermc.graphic.vertex.Vertex;
 import com.andedit.viewermc.util.Util;
@@ -16,23 +19,26 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Disposable;
 
 public class Mesh implements Disposable {
-	private final ArrayList<Vertex> soildVerts, transVerts;
+	private final EnumMap<RenderLayer, ArrayList<Vertex>> verts;
 	private final WorldRenderer render;
 	private final Section section;
 	private final int x, y, z;
+	private boolean isEmpty;
 	
 	public Mesh(WorldRenderer render, Section section, int x, int y, int z) {
 		this.render = render;
 		this.section = section;
-		soildVerts = new ArrayList<>(2);
-		transVerts = new ArrayList<>(1);
 		this.x = x;
 		this.y = y;
 		this.z = z;
+		
+		verts = new EnumMap<>(RenderLayer.class);
+		verts.put(RenderLayer.SOILD, new ArrayList<>(2));
+		verts.put(RenderLayer.TRANS, new ArrayList<>(1));
 	}
 	
 	/** @return is empty after build. */
-	public boolean build(World world, MeshBuilder builder) {
+	public boolean build(World world, MeshProvider provider) {
 		int xPos = x<<4;
 		int yPos = y<<4;
 		int zPos = z<<4;
@@ -41,12 +47,12 @@ public class Mesh implements Disposable {
 		for (int y = 0; y < Section.SIZE; y++)
 		for (int z = 0; z < Section.SIZE; z++) {
 			var state = world.getBlockState(xPos+x, yPos+y, zPos+z);
-			state.build(world, builder, xPos+x, yPos+y, zPos+z);
+			state.build(world, provider, xPos+x, yPos+y, zPos+z);
 		}
 		
 		// this looks bad.
-		boolean isEmpty = builder.size() == 0;
-		build(builder);
+		isEmpty = provider.isEmpty();
+		build(provider);
 		return isEmpty;
 	}
 	
@@ -74,40 +80,37 @@ public class Mesh implements Disposable {
 		return true;
 	}
 	
-	public void render() {
-		for (var vertex : soildVerts) {
+	public void render(RenderLayer layer) {
+		for (var vertex : verts.get(layer)) {
 			vertex.bind();
 			gl.glDrawElements(GL20.GL_TRIANGLES, (vertex.size() / MeshVert.byteSize) * 6, GL20.GL_UNSIGNED_SHORT, 0);
 			if (!Util.isGL30()) {
 				vertex.unbind();
 			}
-
-			//System.out.println(vertex.size() + " " + x + " " + y + " " + z);
 		}
 	}
 	
-	public void build(VertConsumer consumer) {
-		var it = soildVerts.listIterator(consumer.build(soildVerts, () -> Vertex.newVbo(MeshVert.context, GL20.GL_STREAM_DRAW)));
-        while (it.hasNext()) {
-            it.next().dispose();
-            it.remove();
-        }
+	public boolean isEmpty(RenderLayer layer) {
+		return verts.get(layer).isEmpty();
+	}
+	
+	public void build(MeshProvider provider) {
+		provider.build(verts);
 	}
 	
 	public boolean isEmpty() {
-		return soildVerts.isEmpty();
+		return isEmpty;
 	}
 	
 	public boolean pass(GridPoint3 pos, int offset) {
 		final int radH = WorldRenderer.RADIUS_H + offset;
 		final int radV = WorldRenderer.RADIUS_V + offset;
-		return x < (-radH)+pos.x || y < (-radV)+pos.y || z < (-radH)+pos.z || x > radH+pos.x || y > radV+pos.y || z > radH+pos.z;
+		return x <= (-radH)+pos.x || y <= (-radV)+pos.y || z <= (-radH)+pos.z || x > radH+pos.x || y > radV+pos.y || z > radH+pos.z;
 	}
 
 	@Override
 	public void dispose() {
-		soildVerts.forEach(Vertex::dispose);
-		transVerts.forEach(Vertex::dispose);
+		verts.values().forEach(a -> a.forEach(Vertex::dispose));
 		if (!isEmpty()) setDirty(true);
 	}
 	

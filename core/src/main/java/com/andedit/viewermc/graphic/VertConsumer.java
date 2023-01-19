@@ -27,6 +27,9 @@ public interface VertConsumer {
 	}
 	
 	/** Append color. */
+	void col(int color);
+	
+	/** Append color. */
 	void col(float r, float g, float b, float a);
 	
 	/** Append color. */

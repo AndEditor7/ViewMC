@@ -5,12 +5,14 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import com.andedit.viewermc.block.BlockModel.Quad;
+import com.andedit.viewermc.block.Blocks;
 import com.andedit.viewermc.graphic.vertex.Vertex;
 import com.andedit.viewermc.util.TexReg;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.FloatArray;
+import com.badlogic.gdx.utils.NumberUtils;
 
 // v3-----v2
 // |       |
@@ -22,6 +24,8 @@ public class MeshBuilder implements VertConsumer {
 	/** A cached ArrayList instance for storing quads temporary. */
 	public final ArrayList<Quad> quads = new ArrayList<>();
 	
+	public final Blocks blocks;
+	
 	private final FloatArray array = new FloatArray(512);
 	
 	/** Ambient light, block light, and sky light */
@@ -32,6 +36,10 @@ public class MeshBuilder implements VertConsumer {
 	protected float uScale = 1, vScale = 1;
 	
 	protected TexReg region = TexReg.FULL;
+	
+	public MeshBuilder(Blocks blocks) {
+		this.blocks = blocks;
+	}
 	
 	public void setUVRange(TexReg region) {
 		this.region = region;
@@ -47,6 +55,14 @@ public class MeshBuilder implements VertConsumer {
 	
 	public void setLight(float ambientLight, float blockLight, float skyLight) {
 		dat = toData(ambientLight, blockLight, skyLight);
+	}
+	
+	public void setColor(int color) {
+		this.col = NumberUtils.intToFloatColor(color);
+	}
+	
+	public void setColor(float color) {
+		this.col = color;
 	}
 	
 	public void vert1(float x, float y, float z) {
@@ -105,6 +121,11 @@ public class MeshBuilder implements VertConsumer {
 	@Override
 	public void uv(float u, float v) {
 		array.add(uOffset + uScale * u, vOffset + vScale * v);
+	}
+	
+	@Override
+	public void col(int color) {
+		array.add(NumberUtils.intToFloatColor(color));
 	}
 	
 	@Override

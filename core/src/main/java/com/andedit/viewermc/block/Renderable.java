@@ -4,6 +4,7 @@ import java.util.Collection;
 
 import com.andedit.viewermc.block.BlockModel.Quad;
 import com.andedit.viewermc.graphic.MeshBuilder;
+import com.andedit.viewermc.graphic.MeshProvider;
 import com.andedit.viewermc.world.World;
 import com.badlogic.gdx.math.collision.BoundingBox;
 

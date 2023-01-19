@@ -46,6 +46,26 @@ public enum Facing {
 		return null;
 	}
 	
+	public int offsetValue(Axis axis) {
+		return axis.getAxis(xOffset, yOffset, zOffset);
+	}
+	
+	public Facing getUpFace() {
+		return switch (this) {
+		case NORTH, EAST, SOUTH, WEST -> UP;
+		case UP  -> NORTH;
+		case DOWN -> SOUTH;
+		};
+	}
+	
+	public Facing getRightFace() {
+		return switch (this) {
+		case NORTH, EAST, SOUTH, WEST -> rotateY();
+		case UP  -> WEST;
+		case DOWN -> EAST;
+		};
+	}
+	
 	public Facing invert() {
 		return switch (this) {
 		case UP    -> DOWN;
@@ -140,6 +160,10 @@ public enum Facing {
 			case X, Y -> Z;
 			case Z -> X;
 			};
+		}
+		
+		public int getInt(Axis axis) {
+			return this == axis ? 1 : 0;
 		}
 		
 		public Vector3 getVec() {

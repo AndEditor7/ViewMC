@@ -41,6 +41,11 @@ public class BlockLoader implements Callable<Blocks> {
 			var blockModelsEntry = new OrderedMap<Identifier, ZipEntry>(2000);
 			var blockTexturesEntry = new ObjectMap<Identifier, ZipEntry>(3000);
 			var blockTexturesAniEntry = new ObjectMap<Identifier, ZipEntry>(1000);
+			var otherEntry = new ObjectMap<Identifier, ZipEntry>(100);
+			
+			var textureList = new ArrayList<String>();
+			textureList.add("textures/colormap/grass.png");
+			textureList.add("textures/colormap/foliage.png");
 
 			var entries = zipFile.entries();
 			var namespace = "minecraft";
@@ -48,7 +53,7 @@ public class BlockLoader implements Callable<Blocks> {
 				final var entry = entries.nextElement();
 				final var name = entry.getName();
 
-				var array = name.split("/");
+				var array = Util.split(name, '/');
 				if (!"assets".equals(Util.get(array, 0))) {
 					continue;
 				}
@@ -68,6 +73,12 @@ public class BlockLoader implements Callable<Blocks> {
 					if ("textures".equals(dir1)) {
 						var n = name.substring(name.indexOf("textures/") + 9, name.length() - 4);
 						blockTexturesEntry.put(new Identifier(namespace, n), entry);
+					}
+					for (var path : textureList) {
+						if (name.endsWith(path)) {
+							otherEntry.put(new Identifier(namespace, path), entry);
+							break;
+						}
 					}
 				} else if (name.endsWith(".mcmeta")){
 					if ("textures".equals(dir1) && "block".equals(dir2)) {
@@ -108,7 +119,7 @@ public class BlockLoader implements Callable<Blocks> {
 
 			var textures = new TextureAtlas(zipFile, textureIds, blockTexturesEntry, blockTexturesAniEntry);
 			
-			return new Blocks(blockStates, blockModels, textures);
+			return new Blocks(zipFile, otherEntry, blockStates, blockModels, textures);
 		}
 	}
 }

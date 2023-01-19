@@ -6,23 +6,19 @@ import java.util.List;
 import java.util.function.Predicate;
 
 import com.andedit.viewermc.block.BlockModel.Quad;
-import com.andedit.viewermc.block.model.BlockModelJson;
 import com.andedit.viewermc.block.state.BlockStateJson;
 import com.andedit.viewermc.block.state.VariantJson;
 import com.andedit.viewermc.graphic.MeshBuilder;
-import com.andedit.viewermc.util.Identifier;
 import com.andedit.viewermc.util.ModelSupplier;
 import com.andedit.viewermc.util.Util;
 import com.andedit.viewermc.world.World;
 import com.badlogic.gdx.math.collision.BoundingBox;
-import com.badlogic.gdx.utils.OrderedMap;
 
-class Variants implements Renderable {
+public class Variants implements Renderable {
 	
 	public final List<Variant> variants;
 	
-	public Variants(BlockStateJson state, OrderedMap<Identifier, BlockModelJson> blockModels, TextureAtlas textures) {
-		var supplier = new ModelSupplier(blockModels, textures);
+	public Variants(BlockStateJson state, ModelSupplier supplier) {
 		variants = new ArrayList<>(state.variants.size());
 		
 		for (var json : state.variants) {
@@ -85,13 +81,13 @@ class Variants implements Renderable {
 				cases.add(new Case(string));
 			}
 			for (var model : variant.models) {
-				models.add(model.weight, supplier.get(model.model).create(model));
+				models.add(model.weight, supplier.config(model.model, supplier.get(model.model).create(model)));
 			}
 		}
 		
 		@Override
 		public void build(World world, MeshBuilder builder, BlockState state, int x, int y, int z) {
-			models.apply((int)Util.hashCode(x, y, z)).build(world, builder, x, y, z);
+			models.apply((int)Util.hashCode(x, y, z)).build(world, builder, state, x, y, z);
 		}
 
 		@Override

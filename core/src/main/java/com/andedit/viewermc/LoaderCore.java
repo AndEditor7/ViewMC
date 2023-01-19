@@ -33,7 +33,7 @@ public class LoaderCore<T> implements Screen {
 
 	@Override
 	public void show() {
-		future = task.submit(main.executor);
+		//future = task.submit(main.executor);
 	}
 
 	@Override

@@ -6,11 +6,13 @@ import java.io.BufferedInputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import com.andedit.viewermc.graphic.TexBinder;
 import com.andedit.viewermc.util.ByteArrayOutput;
 import com.andedit.viewermc.util.Identifier;
 import com.andedit.viewermc.util.Pair;
 import com.andedit.viewermc.util.TexReg;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.MathUtils;
@@ -39,6 +41,9 @@ public class TextureAtlas implements Disposable {
 	private final Array<Animated> animated;
 	private final ObjectMap<Identifier, TexReg> regMap;
 	
+	private final TexReg missing;
+	private TexBinder binder;
+	
 	@Null
 	private Texture texture;
 	private float time = 0;
@@ -62,7 +67,7 @@ public class TextureAtlas implements Disposable {
 		}
 
 		// Predict the dimension size of the texture atlas and create the pixmap.
-		int size = MathUtils.nextPowerOfTwo((int) Math.sqrt((pixList.size) * (TEXTURE_SIZE * TEXTURE_SIZE)));
+		int size = MathUtils.nextPowerOfTwo((int) Math.sqrt((pixList.size+1) * (TEXTURE_SIZE * TEXTURE_SIZE)));
 		atlas = new Pixmap(size, size, Pixmap.Format.RGBA8888);
 		atlas.setBlending(Pixmap.Blending.None);
 		atlas.setFilter(Pixmap.Filter.NearestNeighbour);
@@ -70,7 +75,17 @@ public class TextureAtlas implements Disposable {
 		regMap = new ObjectMap<Identifier, TexReg>(textureIds.size);
 		var pixDispose = new Array<Pixmap>(textureIds.size);
 		final int idxSize = size / TEXTURE_SIZE;
-		int x=0, y=0;
+		int x=1, y=0;
+		
+		// Missing texture
+		atlas.setColor(Color.MAGENTA);
+		atlas.drawRectangle(0, 0, 8, 8);
+		atlas.drawRectangle(8, 8, 8, 8);
+		atlas.setColor(Color.BLACK);
+		atlas.drawRectangle(0, 8, 8, 8);
+		atlas.drawRectangle(8, 0, 8, 8);
+		missing = newReg(0, 0, size);
+		
 		for (var pair : pixList) {
 			Identifier id = pair.left;
 			Pixmap pixmap = pair.right;
@@ -100,10 +115,19 @@ public class TextureAtlas implements Disposable {
 	public void createTexture() {
 		if (texture != null) throw new IllegalStateException("Texture is already created.");
 		texture = new Texture(atlas);
+		binder = new TexBinder();
 	}
 	
 	public Texture getTexture() {
 		return texture;
+	}
+	
+	public void bind() {
+		binder.bind(texture);
+	}
+	
+	public int getUnit() {
+		return binder.unit;
 	}
 
 	/** Only update if the texture is binded. */
@@ -119,16 +143,18 @@ public class TextureAtlas implements Disposable {
 		}
 	}
 	
-	@Null
 	public TexReg getRegion(Identifier id) {
-		return regMap.get(id); // TODO: Missing texture
+		return regMap.get(id, missing); // TODO: Missing texture
 	}
 
 	@Override
 	public void dispose() {
 		atlas.dispose();
 		animated.forEach(Animated::dispose);
-		if (texture != null) texture.dispose();
+		if (texture != null) {
+			texture.dispose();
+			binder.dispose();
+		}
 	}
 	
 	/** Create a new Texture Region. The parameters are just index like a tile position. */

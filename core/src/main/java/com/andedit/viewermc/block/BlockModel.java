@@ -6,17 +6,22 @@ import java.util.Iterator;
 import java.util.List;
 
 import com.andedit.viewermc.block.BlockModel.Quad;
+import com.andedit.viewermc.block.container.Block;
 import com.andedit.viewermc.block.model.BlockModelJson;
 import com.andedit.viewermc.block.model.Face;
 import com.andedit.viewermc.block.model.Rotation;
 import com.andedit.viewermc.block.model.UV;
 import com.andedit.viewermc.block.state.ModelJson;
+import com.andedit.viewermc.graphic.Lighting;
 import com.andedit.viewermc.graphic.MeshBuilder;
 import com.andedit.viewermc.util.Facing;
 import com.andedit.viewermc.util.Facing.Axis;
+import com.andedit.viewermc.util.IntsFunction;
 import com.andedit.viewermc.util.TexReg;
 import com.andedit.viewermc.util.Util;
+import com.andedit.viewermc.world.Lights;
 import com.andedit.viewermc.world.World;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
@@ -34,11 +39,13 @@ public class BlockModel implements Iterable<Quad> {
 	/** tolerance */
 	private static final float T = 0.001f;
 	
-	private final ArrayList<Quad> quads = new ArrayList<>();
-	private final ArrayList<BoundingBox> boxes = new ArrayList<>();
+	public final ArrayList<Quad> quads = new ArrayList<>();
+	public final ArrayList<BoundingBox> boxes = new ArrayList<>();
 	
 	/** ambient occlusion */
 	public boolean ao = true;
+	
+	private boolean isFullCube;
 	
 	public BlockModel() {
 		
@@ -46,6 +53,7 @@ public class BlockModel implements Iterable<Quad> {
 	
 	private BlockModel(BlockModel oldModel, ModelJson model) {
 		ao = oldModel.ao;
+		isFullCube = oldModel.isFullCube;
 		
 		var set = new OrderedMap<BoundingBox, ArrayList<Quad>>(oldModel.boxes.size());
 		for (var quad : oldModel.quads) {
@@ -102,26 +110,26 @@ public class BlockModel implements Iterable<Quad> {
 		return this;
 	}
 	
-	public void build(World world, MeshBuilder builder, int x, int y, int z) {
+	public void build(World world, MeshBuilder builder, BlockState state, int x, int y, int z) {
 		for (int i=0,s=quads.size(); i < s; i++) {
-			quads.get(i).build(world, builder, x, y, z);
+			quads.get(i).build(world, builder, state, x, y, z);
 		}
 	}
 	
-	public void getQuads(Collection<Quad> list) {
+	public void getQuads(Collection<Quad> collection) {
 		for (int i=0,s=quads.size(); i < s; i++) {
-			list.add(quads.get(i));
+			collection.add(quads.get(i));
 		}
 	}
 	
-	public void getBoxes(Collection<BoundingBox> list) {
+	public void getBoxes(Collection<BoundingBox> collection) {
 		for (int i=0,s=boxes.size(); i < s; i++) {
-			list.add(boxes.get(i));
+			collection.add(boxes.get(i));
 		}
 	}
 	
 	public boolean isFullOpaque() {
-		return false;
+		return isFullCube;
 	}
 	
 	/** a = from, b = to. 0 to 16 */
@@ -174,6 +182,10 @@ public class BlockModel implements Iterable<Quad> {
 		box.getCorner010(west.v3);
 		box.getCorner000(west.v4);
 		
+		if (box.getWidth() > 0.99f && box.getHeight() > 0.99f && box.getDepth() > 0.99f) {
+			isFullCube = true;
+		}
+		
 		boxes.add(box);
 		return new Cube(box, up, down, north, east, south, west);
 	}
@@ -199,6 +211,16 @@ public class BlockModel implements Iterable<Quad> {
 		return quads.iterator();
 	}
 	
+	private static int signum(float a) {
+		return MathUtils.round(Math.signum((a-0.5f)));
+	}
+	
+	private static float dst(float a, float b) {
+		a = 1f - (Math.abs(a - 0.5f) * 2.0f);
+		b = 1f - (Math.abs(b - 0.5f) * 2.0f);
+		return MathUtils.clamp(Math.min(a, b), 0f, 1f);
+	}
+	
 	public class Quad {
 		public final Vector3 v1 = new Vector3();
 		public final Vector3 v2 = new Vector3();
@@ -214,12 +236,12 @@ public class BlockModel implements Iterable<Quad> {
 		private Facing face;
 		public boolean shade = true;
 		public int tintIndex = -1;
-		public boolean culling = true;
+		public boolean culling = true, cullable = true;
 		public boolean isAlign = true;
+		private boolean borderCollide;
 		public TexReg region = TexReg.FULL;
 		
 		public final BoundingBox box;
-		private boolean borderCollide;
 		
 		private Quad(Quad quad, BoundingBox box) {
 			v1.set(quad.v1);
@@ -239,6 +261,7 @@ public class BlockModel implements Iterable<Quad> {
 			isAlign = quad.isAlign;
 			region = quad.region;
 			borderCollide = quad.borderCollide;
+			cullable = quad.cullable;
 			this.box = box;
 		}
 
@@ -250,31 +273,26 @@ public class BlockModel implements Iterable<Quad> {
 			tintIndex = value.tintIndex;
 			culling = value.culling;
 			var region = textures.getRegion(model.getTexture(value.texture));
-			if (region == null) region = TexReg.FULL; 
 			reg(region, value.uv);
 			rotateTex(value.rotation);
 		}
 
-		public void build(World world, MeshBuilder builder, int x, int y, int z) {
+		public void build(World world, MeshBuilder builder, BlockState state, int x, int y, int z) {
 			List<Quad> quads = builder.quads;
 			quads.clear();
+			
 			if (borderCollide && culling) {
 				//var off = pos.offset(face);
 				//if (World.isOutBound(off)) {
 					//return;
 				//}
-				
-				var state = world.getBlockState(x+face.xOffset, y+face.yOffset, z+face.zOffset);
-				state.getQuads(quads, x+face.xOffset, y+face.yOffset, z+face.zOffset);
+				var nState = world.getBlockState(x+face.xOffset, y+face.yOffset, z+face.zOffset);
+				if (!state.canRender(nState, face, x, y, z)) return;
+				nState.getQuads(quads, x+face.xOffset, y+face.yOffset, z+face.zOffset);
 			}
 			
 			if (canRender(quads)) {
-				builder.setLight(shade ? (face != null ? BlockForm.getShade(face) : 1) : 1, 1, 1);
-				final float xf = x, yf = y, zf = z;
-				builder.vert(v1.x+xf, v1.y+yf, v1.z+zf, t1.x, t1.y);
-				builder.vert(v2.x+xf, v2.y+yf, v2.z+zf, t2.x, t2.y);
-				builder.vert(v3.x+xf, v3.y+yf, v3.z+zf, t3.x, t3.y);
-				builder.vert(v4.x+xf, v4.y+yf, v4.z+zf, t4.x, t4.y);
+				render(world, builder, state, x, y, z);
 			}
 		}
 		
@@ -300,7 +318,7 @@ public class BlockModel implements Iterable<Quad> {
 			float areaCovered = 0;
 			for (int i=0,s=quads.size(); i < s; i++) {
 				var quad = quads.get(i);
-				if (quad.borderCollide && face == quad.face.invert()) {
+				if (quad.borderCollide && quad.cullable && face == quad.face.invert()) {
 					var boxB = quad.box;
 					final float uMinA, uMaxA, uMinB, uMaxB;
 					final float vMinA, vMaxA, vMinB, vMaxB;
@@ -337,6 +355,132 @@ public class BlockModel implements Iterable<Quad> {
 			}
 			
 			return true;
+		}
+		
+		void render(World world, MeshBuilder builder, BlockState state, int x, int y, int z) {
+			final float xf = x, yf = y, zf = z;
+			float shadeLight;
+			builder.setColor(tintIndex == -1 ? Color.WHITE_FLOAT_BITS : BlockColors.getColorFloat(state, world, x, y, z, tintIndex));
+			
+			shadeLight = shade ? Lighting.getShade(face) : 1;
+			
+			// Light coord
+			int x0 = x + getOffset(Axis.X);
+			int y0 = y + getOffset(Axis.Y);
+			int z0 = z + getOffset(Axis.Z);
+			
+			int light = world.getLight(x0, y0, z0);
+			
+			//if (false) {
+			if (ao && face != null) { // ambient occlusion mode
+				Facing upFace = face.getUpFace();
+				Facing rightFace = face.getRightFace();
+				
+				int x1 = x + face.offsetValue((Axis.X));
+				int y1 = y + face.offsetValue((Axis.Y));
+				int z1 = z + face.offsetValue((Axis.Z));
+				
+				for (int i = 0; i < 4; i++) {
+					Vector3 v = getVert(i);
+					Vector2 t = getUV(i);
+					
+					// Mystery horizontal axis coordinate. The face is considered forward/normal facing.
+					float a = rightFace.axis.getAxis(v);
+					float b = upFace.axis.getAxis(v);
+					
+					int aSign = signum(a);
+					int bSign = signum(b);
+					
+					int x2 = (aSign*rightFace.axis.getInt(Axis.X)) + (bSign*upFace.axis.getInt(Axis.X));
+					int y2 = (aSign*rightFace.axis.getInt(Axis.Y)) + (bSign*upFace.axis.getInt(Axis.Y));
+					int z2 = (aSign*rightFace.axis.getInt(Axis.Z)) + (bSign*upFace.axis.getInt(Axis.Z));
+					boolean state1 = world.getBlockState(x1+x2, y1+y2, z1+z2).isFullOpque(x1+x2, y1+y2, z1+z2);
+					int lit = world.getLight(x0+x2, y0+y2, z0+z2);
+					x2 = aSign*rightFace.axis.getInt(Axis.X);
+					y2 = aSign*rightFace.axis.getInt(Axis.Y);
+					z2 = aSign*rightFace.axis.getInt(Axis.Z);
+					boolean stateA = world.getBlockState(x1+x2, y1+y2, z1+z2).isFullOpque(x1+x2, y1+y2, z1+z2);
+					int litA = world.getLight(x0+x2, y0+y2, z0+z2);
+					x2 = bSign*upFace.axis.getInt(Axis.X);
+					y2 = bSign*upFace.axis.getInt(Axis.Y);
+					z2 = bSign*upFace.axis.getInt(Axis.Z);
+					boolean stateB = world.getBlockState(x1+x2, y1+y2, z1+z2).isFullOpque(x1+x2, y1+y2, z1+z2);
+					int litB = world.getLight(x0+x2, y0+y2, z0+z2);
+					
+					float dst = dst(a, b);
+					
+					int level = vertAO(world.getBlockState(x1, y1, z1).isFullOpque(x1, y1, z1), stateA, stateB, state1);
+					float ao = Lighting.getAmbient(level);
+					
+					float blockLight = MathUtils.lerp(calcLight(Lights.BLOCK, light, litA, litB, lit), Lights.toBlockF(light), dst);
+					float skyLight = MathUtils.lerp(calcLight(Lights.SKY, light, litA, litB, lit), Lights.toSkyF(light), dst);
+					
+					builder.setLight(shadeLight * ao, blockLight, skyLight);
+					builder.vert(v.x+xf, v.y+yf, v.z+zf, t.x, t.y);
+				}
+			} else {
+				builder.setLight(shadeLight, Lights.toBlockF(light), Lights.toSkyF(light));
+				builder.vert(v1.x+xf, v1.y+yf, v1.z+zf, t1.x, t1.y);
+				builder.vert(v2.x+xf, v2.y+yf, v2.z+zf, t2.x, t2.y);
+				builder.vert(v3.x+xf, v3.y+yf, v3.z+zf, t3.x, t3.y);
+				builder.vert(v4.x+xf, v4.y+yf, v4.z+zf, t4.x, t4.y);
+			}
+		}
+		
+		private static int vertAO(boolean center, boolean side1, boolean side2, boolean corner) {
+			//if (side1 && side2) return 1 - toInt(center);
+			return 4 - (toInt(center) + toInt(side1) + toInt(side2) + toInt(corner));
+		}
+		
+		private static int toInt(boolean bool) {
+			return bool ? 1 : 0;
+		}
+		
+		private static float calcLight(IntsFunction function, int center, int sideA, int sideB, int corner) {
+			int lightTotal = function.apply(center);
+			int lightCount = 1;
+			if (function.apply(sideA) != 0) {
+				lightCount++;
+				lightTotal += function.apply(sideA);
+			}
+
+			if (function.apply(sideB) != 0) {
+				lightCount++;
+				lightTotal += function.apply(sideB);
+			}
+
+			if ((function.apply(corner) != 0 || function.apply(center) == 1)) {
+				lightCount++;
+				lightTotal += (function.apply(corner) == 1 && function.apply(center) == 1) ? 0 : function.apply(corner);
+			}
+
+			final float value = lightTotal / (float)lightCount;
+			return MathUtils.round(value) / Lights.SCL;
+		}
+		
+		/** Get face offset value for lighting */
+		int getOffset(Axis axis) {
+			return face != null && borderCollide ? face.offsetValue(axis) : 0;
+		}
+		
+		Vector3 getVert(int i) {
+			return switch (i) {
+			case 0 -> v1;
+			case 1 -> v2;
+			case 2 -> v3;
+			case 3 -> v4;
+			default -> null;
+			};
+		}
+		
+		Vector2 getUV(int i) {
+			return switch (i) {
+			case 0 -> t1;
+			case 1 -> t2;
+			case 2 -> t3;
+			case 3 -> t4;
+			default -> null;
+			};
 		}
 		
 		public Quad reg(TexReg region, @Null UV uv) {
@@ -466,24 +610,26 @@ public class BlockModel implements Iterable<Quad> {
 			}
 		}
 		
-		private void rotate(Matrix4 mat, Vector3 origin) {
+		private void rotate(Matrix4 mat, Vector3 origin, boolean rescale) {
 			culling = false;
 			borderCollide = false;
+			cullable = false;
 			isAlign = false;
-			face = null;
-			v1.sub(origin).mul(mat).add(origin);
-			v2.sub(origin).mul(mat).add(origin);
-			v3.sub(origin).mul(mat).add(origin);
-			v4.sub(origin).mul(mat).add(origin);
+			isFullCube = false;
+			rescale(v1.sub(origin).mul(mat).add(origin), rescale);
+			rescale(v2.sub(origin).mul(mat).add(origin), rescale);
+			rescale(v3.sub(origin).mul(mat).add(origin), rescale);
+			rescale(v4.sub(origin).mul(mat).add(origin), rescale);
+		}
+		
+		private static void rescale(Vector3 v, boolean rescale) {
+			if (rescale)
+			v.set(MathUtils.round(v.x), MathUtils.round(v.y), MathUtils.round(v.z));
 		}
 		
 		private void rotate(ModelJson model) {
 			if (face != null)
 			face = face.rotate(model.x, model.y);
-			if (model.x != 0) {
-				//culling = false;
-				//borderCollide = false;
-			}
 			float a = 0.5f;
 			v1.sub(a).mul(model.matrix).add(a);
 			v2.sub(a).mul(model.matrix).add(a);
@@ -496,9 +642,11 @@ public class BlockModel implements Iterable<Quad> {
 			if (face == this.face) {
 				return this;
 			}
+			
 			this.face = face;
 			if (face == null) {
 				borderCollide = false;
+				cullable = false;
 				return noShade();
 			}
 			
@@ -539,7 +687,7 @@ public class BlockModel implements Iterable<Quad> {
 			if (rotation == null || MathUtils.isZero(rotation.angle)) return;
 			var origin = rotation.origin.cpy().scl(1/16f);
 			var mat = new Matrix4(rotation.quat); // TODO: Try setting the matrix's origin.
-			forEach(q -> q.rotate(mat, origin));
+			forEach(q -> q.rotate(mat, origin, rotation.rescale));
 		}
 
 		public void shade(boolean shade) {

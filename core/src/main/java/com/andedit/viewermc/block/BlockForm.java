@@ -1,23 +1,31 @@
 package com.andedit.viewermc.block;
 
-import com.andedit.viewermc.util.Facing;
+import java.util.Collection;
 
-public interface BlockForm extends Renderable {
+import com.andedit.viewermc.block.BlockModel.Quad;
+import com.andedit.viewermc.graphic.MeshProvider;
+import com.andedit.viewermc.util.Facing;
+import com.andedit.viewermc.world.World;
+import com.badlogic.gdx.math.collision.BoundingBox;
+import com.badlogic.gdx.utils.Null;
+
+public interface BlockForm {
 	
-	static float getShade(Facing face) {
-		return switch (face) {
-		case NORTH, SOUTH -> 0.8f;
-		case EAST, WEST -> 0.7f;
-		case DOWN -> 0.6f;
-		default -> 1.0f;
-		};
-	}
+	void build(World world, MeshProvider builder, BlockState state, int x, int y, int z);
 	
-	/** Contains the property key */
-	default boolean containsKey(String key) {
+	void getQuads(BlockState state, Collection<Quad> collection, int x, int y, int z);
+	
+	void getBoxes(BlockState state, Collection<BoundingBox> collection, int x, int y, int z);
+	
+	/** Is full cube and opaque. Used for ambient occlusion. */
+	boolean isFullOpaque(BlockState state, int x, int y, int z);
+	
+	default boolean canRender(BlockState primary, BlockState secondary, Facing face, int x, int y, int z) {
 		return true;
 	}
 	
 	/** Get default blockstate */
 	BlockState getState();
+	
+	String getId();
 }

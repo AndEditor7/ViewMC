@@ -1,6 +1,8 @@
 package com.andedit.viewermc.util;
 
+import java.nio.IntBuffer;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Consumer;
 
 import com.badlogic.gdx.Application.ApplicationType;
@@ -112,7 +114,7 @@ public final class Util {
 	}
 	
 	public static ArrayList<String> split(final String string, final char delimiter) {
-		var array = new ArrayList<String>((string.length() >> 1) + 1);
+		var array = new ArrayList<String>((string.length() >> 2) + 1);
 		int i = 0;
 		int j = string.indexOf(delimiter, 0); // first substring
 
@@ -127,12 +129,28 @@ public final class Util {
 		return array;
 	}
 	
+	public static int[] toIntArray(IntBuffer buffer) {
+		var ints = new int[buffer.remaining()];
+		for (int i = buffer.position(); i < buffer.limit(); i++) {
+			ints[i - buffer.position()] = buffer.get(i);
+		}
+		return ints;
+	}
+	
 	@Null
 	public static <T> T get(T[] array, int i) {
 		if (array == null || i < 0 || i >= array.length) {
 			return null;
 		}
 		return array[i];
+	}
+	
+	@Null
+	public static <T> T get(List<T> list, int i) {
+		if (list == null || i < 0 || i >= list.size()) {
+			return null;
+		}
+		return list.get(i);
 	}
 
 	public static void mul(BoundingBox box, Matrix4 transform) {
@@ -151,5 +169,10 @@ public final class Util {
 		box.min.add(a);
 		box.max.add(a);
 		box.update();
+	}
+
+	public static <T> T make(T obj, Consumer<T> consumer) {
+		consumer.accept(obj);
+		return obj;
 	}
 }

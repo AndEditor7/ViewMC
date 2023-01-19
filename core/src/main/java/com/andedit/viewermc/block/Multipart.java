@@ -6,25 +6,21 @@ import java.util.List;
 import java.util.function.Predicate;
 
 import com.andedit.viewermc.block.BlockModel.Quad;
-import com.andedit.viewermc.block.model.BlockModelJson;
 import com.andedit.viewermc.block.state.BlockStateJson;
 import com.andedit.viewermc.block.state.CaseJson;
 import com.andedit.viewermc.block.state.WhenJson;
 import com.andedit.viewermc.graphic.MeshBuilder;
-import com.andedit.viewermc.util.Identifier;
 import com.andedit.viewermc.util.ModelSupplier;
 import com.andedit.viewermc.util.Pair;
 import com.andedit.viewermc.util.Util;
 import com.andedit.viewermc.world.World;
 import com.badlogic.gdx.math.collision.BoundingBox;
-import com.badlogic.gdx.utils.OrderedMap;
 
 public class Multipart implements Renderable {
 
 	private final List<Case> cases;
 	
-	public Multipart(BlockStateJson state, OrderedMap<Identifier, BlockModelJson> blockModels, TextureAtlas textures) {
-		var supplier = new ModelSupplier(blockModels, textures);
+	public Multipart(BlockStateJson state, ModelSupplier supplier) {
 		cases = new ArrayList<>(state.cases.size());
 		
 		for (var json : state.cases) {
@@ -68,14 +64,14 @@ public class Multipart implements Renderable {
 			
 			models = new Weighted<>();
 			for (var model : caseJson.apply) {
-				models.add(model.weight, supplier.get(model.model).create(model));
+				models.add(model.weight, supplier.config(model.model, supplier.get(model.model).create(model)));
 			}
 		}
 
 		@Override
 		public void build(World world, MeshBuilder builder, BlockState state, int x, int y, int z) {
 			if (when.test(state)) {
-				models.apply((int)Util.hashCode(x, y, z)).build(world, builder, x, y, z);
+				models.apply((int)Util.hashCode(x, y, z)).build(world, builder, state, x, y, z);
 			}
 		}
 

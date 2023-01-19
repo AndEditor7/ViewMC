@@ -10,6 +10,7 @@ import com.badlogic.gdx.utils.Collections;
 public class Lwjgl3Launcher {
 	public static void main(String[] args) {
 		Collections.allocateIterators = true;
+		Main.api = new DesktopAPI();
 		createApplication();
 	}
 
@@ -20,7 +21,7 @@ public class Lwjgl3Launcher {
 	@SuppressWarnings("unused")
 	private static Lwjgl3ApplicationConfiguration getDefaultConfiguration() {
 		Lwjgl3ApplicationConfiguration config = new Lwjgl3ApplicationConfiguration();
-		config.setTitle("ViewerMC");
+		config.setTitle("MC Viewer");
 		config.useVsync(true);
 		//config.setOpenGLEmulation(GLEmulation.ANGLE_GLES20, 3, 1);
 		config.enableGLDebugOutput(true, System.err);
@@ -33,7 +34,7 @@ public class Lwjgl3Launcher {
 			config.setFullscreenMode(mode);
 		}
 		
-		config.setWindowIcon("libgdx128.png", "libgdx64.png", "libgdx32.png", "libgdx16.png");
+		//config.setWindowIcon("libgdx128.png", "libgdx64.png", "libgdx32.png", "libgdx16.png");
 		return config;
 	}
 }

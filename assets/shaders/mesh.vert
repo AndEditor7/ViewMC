@@ -9,6 +9,7 @@ attribute vec4 a_data;
 
 uniform mat4 u_projTrans;
 
+varying vec3 v_position;
 varying float v_ambientLight;
 varying float v_blockLight;
 varying float v_skyLight;
@@ -21,5 +22,6 @@ void main() {
 	v_skyLight = a_data.b;
 	v_texCoords = a_texCoord0;
 	v_color = a_color;
+	v_position = a_position.xyz;
 	gl_Position = u_projTrans * a_position;
 }

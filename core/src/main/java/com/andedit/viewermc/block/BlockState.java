@@ -3,7 +3,8 @@ package com.andedit.viewermc.block;
 import java.util.Collection;
 
 import com.andedit.viewermc.block.BlockModel.Quad;
-import com.andedit.viewermc.graphic.MeshBuilder;
+import com.andedit.viewermc.graphic.MeshProvider;
+import com.andedit.viewermc.util.Facing;
 import com.andedit.viewermc.world.World;
 import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.utils.Null;
@@ -41,10 +42,19 @@ public class BlockState {
 		}
 	}
 	
+	public boolean isOf(BlockForm block) {
+		return this.block == block;
+	}
+	
 	/** Get the property value */
 	@Null
 	public String get(String key) {
 		return props.get(key);
+	}
+	
+	/** Get the property value */
+	public int getInt(String key) {
+		return Integer.parseInt(get(key));
 	}
 	
 	/** Contains the property key */
@@ -52,7 +62,7 @@ public class BlockState {
 		return props.containsKey(key);
 	}
 	
-	public void build(World world, MeshBuilder builder, int x, int y, int z) {
+	public void build(World world, MeshProvider builder, int x, int y, int z) {
 		block.build(world, builder, this, x, y, z);
 	}
 	
@@ -62,5 +72,13 @@ public class BlockState {
 	
 	public void getBoxes(Collection<BoundingBox> collection, int x, int y, int z) {
 		block.getBoxes(this, collection, x, y, z);
+	}
+	
+	public boolean isFullOpque(int x, int y, int z) {
+		return block.isFullOpaque(this, x, y, z);
+	}
+	
+	public boolean canRender(BlockState secondary, Facing face, int x, int y, int z) {
+		return block.canRender(this, secondary, null, x, y, z);
 	}
 }

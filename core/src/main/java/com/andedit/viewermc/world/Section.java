@@ -1,10 +1,10 @@
 package com.andedit.viewermc.world;
 
-import java.lang.reflect.Array;
-import java.util.Arrays;
-
-import com.andedit.viewermc.block.AirBlock;
+import com.andedit.viewermc.biome.Biome;
+import com.andedit.viewermc.biome.Biomes;
 import com.andedit.viewermc.block.BlockState;
+import com.andedit.viewermc.block.Blocks;
+import com.andedit.viewermc.block.container.AirBlock;
 import com.badlogic.gdx.utils.Null;
 
 import net.querz.nbt.tag.CompoundTag;
@@ -14,18 +14,22 @@ public class Section implements Comparable<Section> {
 	public static final int SIZE = 16;
 	public static final int MASK = SIZE-1;
 
-	public final Chunk chunk;
 	public final byte y;
 	
 	private final byte[] blockLight;
 	private final byte[] skyLight;
+	
+	private final @Null BlockState[] blockPalette;
 	private final long[] blockStates;
-	private final @Null BlockState[] palette;
+	private final int blockBits;
+	
+	private final @Null Biome[] biomePalette;
+	private final long[] biomes;
+	private final int biomeBits;
 	
 	public boolean isDirty = true;
 	
-	public Section(Chunk chunk, CompoundTag data) {
-		this.chunk = chunk;
+	public Section(Blocks blocks, CompoundTag data) {
 		this.y = data.getByte("Y");
 		this.blockLight = data.getByteArray("BlockLight");
 		this.skyLight = data.getByteArray("SkyLight");
@@ -34,20 +38,42 @@ public class Section implements Comparable<Section> {
 		if (block_states != null) {
 			var rawPalette = block_states.getListTag("palette");
 			if (rawPalette == null) {
-				palette = null;
+				blockPalette = null;
 			} else {
-				palette = new BlockState[rawPalette.size()];
+				blockPalette = new BlockState[rawPalette.size()];
 				var list = rawPalette.asCompoundTagList();
-				var blocks = chunk.region.world.blocks;
-				for (int i = 0; i < palette.length; i++) {
-					palette[i] = new BlockState(blocks, list.get(i));
+				for (int i = 0; i < blockPalette.length; i++) {
+					blockPalette[i] = new BlockState(blocks, list.get(i));
 				}
 			}
 			
 			blockStates = block_states.getLongArray("data");
+			blockBits = blockStates.length >> 6;
 		} else {
 			blockStates = LongArrayTag.ZERO_VALUE;
-			palette = null;
+			blockPalette = null;
+			blockBits = 0;
+		}
+		
+		var biomes = data.getCompoundTag("biomes");
+		if (biomes != null) {
+			var rawPalette = biomes.getListTag("palette");
+			if (rawPalette == null) {
+				biomePalette = null;
+			} else {
+				biomePalette = new Biome[rawPalette.size()];
+				var list = rawPalette.asStringTagList();
+				for (int i = 0; i < biomePalette.length; i++) {
+					biomePalette[i] = Biomes.toBiome(list.get(i).getValue());
+				}
+			}
+			
+			this.biomes = biomes.getLongArray("data");
+			biomeBits = 32 - fastNumberOfLeadingZeroes(Math.max(this.biomes.length-1, 1));
+		} else {
+			this.biomes = LongArrayTag.ZERO_VALUE;
+			biomePalette = null;
+			biomeBits = 0;
 		}
 	}
 	
@@ -60,8 +86,8 @@ public class Section implements Comparable<Section> {
 	 * @return The block light level.
 	 */
 	public int getBlockLight(int x, int y, int z) {
-		if (blockLight.length == 0) return 0;
-		final int index = getLightIndex(x, y, z);
+		if (blockLight.length == 0) return Lights.DEFAULT_BLOCK;
+		final int index = getBlockIndex(x, y, z);
         return blockLight[index >> 1] >> 4 * (index & 1) & 0xF;
 	}
 	
@@ -74,9 +100,21 @@ public class Section implements Comparable<Section> {
 	 * @return The sky light level.
 	 */
 	public int getSkyLight(int x, int y, int z) {
-		if (skyLight.length == 0) return 15;
-		final int index = getLightIndex(x, y, z);
+		if (skyLight.length == 0) return Lights.DEFAULT_SKY;
+		final int index = getBlockIndex(x, y, z);
         return skyLight[index >> 1] >> 4 * (index & 1) & 0xF;
+	}
+	
+	/**
+	 * Fetches a light based on a block location from this section.
+	 * The coordinates represent the location of the block inside of this Section.
+	 * @param x The x-coordinate of the block in this Section
+	 * @param y The y-coordinate of the block in this Section
+	 * @param z The z-coordinate of the block in this Section
+	 * @return The light data.
+	 */
+	public int getLight(int x, int y, int z) {
+		return (getBlockLight(x, y, z) << 4) | getSkyLight(x, y, z);
 	}
 	
 	/**
@@ -88,37 +126,57 @@ public class Section implements Comparable<Section> {
 	 * @return The block state data of this block.
 	 */
 	public BlockState getBlockState(int x, int y, int z) {
-		if (palette == null) return AirBlock.INSTANCE.getState(); 
-		int index = getBlockIndex(x, y, z);
-		int paletteIndex = getPaletteIndex(index);
-		return palette[paletteIndex];
+		if (blockPalette == null) return AirBlock.INSTANCE.getState(); 
+		return blockPalette[getPaletteIndex(getBlockIndex(x, y, z), blockBits, blockStates)];
 	}
 	
 	/**
-	 * Returns the index of the block data in the palette.
-	 * @param blockStateIndex The index of the block in this section, ranging from 0-4095.
-	 * @return The index of the block data in the palette.
-	 * */
-	public int getPaletteIndex(int blockStateIndex) {
-		if (blockStates.length == 0) return 0; 
-		int bits = blockStates.length >> 6;
-		int indicesPerLong = (int) (64D / bits);
-		int blockStatesIndex = blockStateIndex / indicesPerLong;
-		int startBit = (blockStateIndex % indicesPerLong) * bits;
-		return (int) bitRange(blockStates[blockStatesIndex], startBit, startBit + bits);
+	 * Fetches a biome based on a block location from this section.
+	 * The coordinates represent the location of the block inside of this Section.
+	 * @param x The x-coordinate of the block in this Section
+	 * @param y The y-coordinate of the block in this Section
+	 * @param z The z-coordinate of the block in this Section
+	 * @return The biome.
+	 */
+	public Biome getBiome(int x, int y, int z) {
+		if (biomePalette == null) return Biomes.VOID; 
+		return biomePalette[getPaletteIndex(getBiomeIndex(x>>2, y>>2, z>>2), biomeBits, biomes)];
 	}
 	
-	public static int getBlockIndex(int x, int y, int z) {
-		return (y & 0xF) * 256 + (z & 0xF) * 16 + (x & 0xF);
+	private static int getPaletteIndex(int index, int bits, long[] data) {
+		if (data.length == 0) return 0; 
+		int indicesPerLong = 64 / bits;
+		int longIndex = index / indicesPerLong;
+		int startBit = (index % indicesPerLong) * bits;
+		return (int)bitRange(data[longIndex], startBit, startBit + bits);
 	}
-
-	public static int getLightIndex(int x, int y, int z) {
+	
+	private static int getBlockIndex(int x, int y, int z) {
 		return y << 8 | z << 4 | x;
+	}
+	
+	private static int getBiomeIndex(int x, int y, int z) {
+		return y << 4 | z << 2 | x;
 	}
 
 	private static long bitRange(long value, int from, int to) {
-		int waste = 64 - to;
+		final int waste = 64 - to;
 		return (value << waste) >>> (waste + from);
+	}
+	
+	private static int fastNumberOfLeadingZeroes(int i) {
+		int n = 25;
+		i <<= 24;
+		if (i >>> 28 == 0) {
+			n += 4;
+			i <<= 4;
+		}
+		if (i >>> 30 == 0) {
+			n += 2;
+			i <<= 2;
+		}
+		n -= i >>> 31;
+		return n;
 	}
 
 	@Override
