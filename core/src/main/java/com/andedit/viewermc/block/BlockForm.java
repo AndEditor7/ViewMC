@@ -5,13 +5,14 @@ import java.util.Collection;
 import com.andedit.viewermc.block.BlockModel.Quad;
 import com.andedit.viewermc.graphic.MeshProvider;
 import com.andedit.viewermc.util.Facing;
+import com.andedit.viewermc.world.Section;
 import com.andedit.viewermc.world.World;
 import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.utils.Null;
 
 public interface BlockForm {
 	
-	void build(World world, MeshProvider builder, BlockState state, int x, int y, int z);
+	void build(Section section, MeshProvider builder, BlockState state, int x, int y, int z);
 	
 	void getQuads(BlockState state, Collection<Quad> collection, int x, int y, int z);
 	

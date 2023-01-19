@@ -29,6 +29,9 @@ public class Section implements Comparable<Section> {
 	
 	public boolean isDirty = true;
 	
+	private volatile World world;
+	private volatile Chunk chunk;
+	
 	public Section(Blocks blocks, CompoundTag data) {
 		this.y = data.getByte("Y");
 		this.blockLight = data.getByteArray("BlockLight");
@@ -75,6 +78,15 @@ public class Section implements Comparable<Section> {
 			biomePalette = null;
 			biomeBits = 0;
 		}
+	}
+	
+	public void init(World world, Chunk chunk) {
+		this.world = world;
+		this.chunk = chunk;
+	}
+	
+	public World getWorld() {
+		return world;
 	}
 	
 	/**
@@ -141,6 +153,56 @@ public class Section implements Comparable<Section> {
 	public Biome getBiome(int x, int y, int z) {
 		if (biomePalette == null) return Biomes.VOID; 
 		return biomePalette[getPaletteIndex(getBiomeIndex(x>>2, y>>2, z>>2), biomeBits, biomes)];
+	}
+	
+	/**
+	 * Fetches a light based on a block location from world space.
+	 * The coordinates represent the location of the block inside of world space.
+	 * @param x The x-coordinate of the block in this world space
+	 * @param y The y-coordinate of the block in this world space
+	 * @param z The z-coordinate of the block in this world space
+	 * @return The light data.
+	 */
+	public int getLightAt(int x, int y, int z) {
+		var chunk = this.chunk;
+		if (this.y != (y >> 4) || chunk.worldX != (x >> 4) || chunk.worldZ != (z >> 4)) {
+			return world.getLight(x, y, z);
+		}
+		return getLight(x&15, y&15, z&15);
+	}
+	
+	/**
+	 * Fetches a block state based on a block location from world space.
+	 * The coordinates represent the location of the block inside of world space.
+	 * @param x The x-coordinate of the block in world space
+	 * @param y The y-coordinate of the block in world space
+	 * @param z The z-coordinate of the block in world space
+	 * @return The block state data of this block.
+	 */
+	public BlockState getBlockStateAt(int x, int y, int z) {
+		if (blockPalette == null) return AirBlock.INSTANCE.getState(); 
+		var chunk = this.chunk;
+		if (this.y != (y >> 4) || chunk.worldX != (x >> 4) || chunk.worldZ != (z >> 4)) {
+			return world.getBlockState(x, y, z);
+		}
+		return getBlockState(x&15, y&15, z&15);
+	}
+	
+	/**
+	 * Fetches a biome based on a block location from world space.
+	 * The coordinates represent the location of the block inside of world space.
+	 * @param x The x-coordinate of the block in this world space
+	 * @param y The y-coordinate of the block in this world space
+	 * @param z The z-coordinate of the block in this world space
+	 * @return The biome.
+	 */
+	public Biome getBiomeAt(int x, int y, int z) {
+		if (biomePalette == null) return Biomes.VOID;
+		var chunk = this.chunk;
+		if (this.y != (y >> 4) || chunk.worldX != (x >> 4) || chunk.worldZ != (z >> 4)) {
+			return world.getBiome(x, y, z);
+		}
+		return getBiome(x&15, y&15, z&15);
 	}
 	
 	private static int getPaletteIndex(int index, int bits, long[] data) {

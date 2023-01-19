@@ -22,13 +22,14 @@ import net.querz.nbt.tag.CompoundTag;
 public class Chunk {
 	
 	public final Array<Section> sections;
-	public final byte x, z;
+	/** chunk in world coordinate. */
+	public final int worldX, worldZ;
 	public byte min;
 	
-	public Chunk(RandomAccessFile raf, Blocks blocks, int x, int z) throws Exception {
+	public Chunk(RandomAccessFile raf, Blocks blocks, int worldX, int worldZ) throws Exception {
 		this.sections = new Array<>(30);
-		this.x = (byte) x;
-		this.z = (byte) z;
+		this.worldX = worldX;
+		this.worldZ = worldZ;
 		
 		byte compressionTypeByte = raf.readByte();
 		CompressionType compressionType = CompressionType.getFromID(compressionTypeByte);
@@ -54,6 +55,20 @@ public class Chunk {
 		
 		//new Sort().sort(sections.items, 0, sections.size);
 		min = sections.first().y;
+	}
+	
+	public void init(World world) {
+		for (var section : sections) {
+			section.init(world, this);
+		}
+	}
+	
+	public int localX() {
+		return worldX & 31;
+	}
+	
+	public int localZ() {
+		return worldZ & 31;
 	}
 	
 	/**

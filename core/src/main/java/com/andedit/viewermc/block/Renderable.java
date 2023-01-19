@@ -5,6 +5,7 @@ import java.util.Collection;
 import com.andedit.viewermc.block.BlockModel.Quad;
 import com.andedit.viewermc.graphic.MeshBuilder;
 import com.andedit.viewermc.graphic.MeshProvider;
+import com.andedit.viewermc.world.Section;
 import com.andedit.viewermc.world.World;
 import com.badlogic.gdx.math.collision.BoundingBox;
 
@@ -12,7 +13,7 @@ import com.badlogic.gdx.math.collision.BoundingBox;
 public interface Renderable {
 	Renderable INSTANCE = new Renderable() {
 		@Override
-		public void build(World world, MeshBuilder builder, BlockState state, int x, int y, int z) {}
+		public void build(Section section, MeshBuilder builder, BlockState state, int x, int y, int z) {}
 		@Override
 		public void getQuads(BlockState state, Collection<Quad> collection, int x, int y, int z) {}
 		@Override
@@ -21,7 +22,7 @@ public interface Renderable {
 		public boolean isFullOpaque(BlockState state, int x, int y, int z) { return false; }
 	};
 	
-	void build(World world, MeshBuilder builder, BlockState state, int x, int y, int z);
+	void build(Section section, MeshBuilder builder, BlockState state, int x, int y, int z);
 	
 	void getQuads(BlockState state, Collection<Quad> collection, int x, int y, int z);
 	

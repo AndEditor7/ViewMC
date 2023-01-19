@@ -5,6 +5,7 @@ import java.util.Collection;
 import com.andedit.viewermc.block.BlockModel.Quad;
 import com.andedit.viewermc.graphic.MeshBuilder;
 import com.andedit.viewermc.graphic.MeshProvider;
+import com.andedit.viewermc.world.Section;
 import com.andedit.viewermc.world.World;
 import com.badlogic.gdx.math.collision.BoundingBox;
 
@@ -18,8 +19,8 @@ public class RenderableHolder implements Renderable {
 	}
 
 	@Override
-	public void build(World world, MeshBuilder builder, BlockState state, int x, int y, int z) {
-		renderable.build(world, builder, state, x, y, z);
+	public void build(Section section, MeshBuilder builder, BlockState state, int x, int y, int z) {
+		renderable.build(section, builder, state, x, y, z);
 	}
 
 	@Override

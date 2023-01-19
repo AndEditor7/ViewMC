@@ -13,6 +13,7 @@ import com.andedit.viewermc.graphic.MeshBuilder;
 import com.andedit.viewermc.util.ModelSupplier;
 import com.andedit.viewermc.util.Pair;
 import com.andedit.viewermc.util.Util;
+import com.andedit.viewermc.world.Section;
 import com.andedit.viewermc.world.World;
 import com.badlogic.gdx.math.collision.BoundingBox;
 
@@ -29,9 +30,9 @@ public class Multipart implements Renderable {
 	}
 
 	@Override
-	public void build(World world, MeshBuilder builder, BlockState state, int x, int y, int z) {
+	public void build(Section section, MeshBuilder builder, BlockState state, int x, int y, int z) {
 		for (int i = 0; i < cases.size(); i++) {
-			cases.get(i).build(world, builder, state, x, y, z);
+			cases.get(i).build(section, builder, state, x, y, z);
 		}
 	}
 
@@ -69,9 +70,9 @@ public class Multipart implements Renderable {
 		}
 
 		@Override
-		public void build(World world, MeshBuilder builder, BlockState state, int x, int y, int z) {
+		public void build(Section section, MeshBuilder builder, BlockState state, int x, int y, int z) {
 			if (when.test(state)) {
-				models.apply((int)Util.hashCode(x, y, z)).build(world, builder, state, x, y, z);
+				models.apply((int)Util.hashCode(x, y, z)).build(section, builder, state, x, y, z);
 			}
 		}
 

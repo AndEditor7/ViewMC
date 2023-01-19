@@ -15,7 +15,7 @@ import com.andedit.viewermc.graphic.MeshProvider;
 import com.andedit.viewermc.graphic.RenderLayer;
 import com.andedit.viewermc.util.Identifier;
 import com.andedit.viewermc.util.ModelSupplier;
-import com.andedit.viewermc.world.World;
+import com.andedit.viewermc.world.Section;
 import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.utils.OrderedMap;
 
@@ -50,8 +50,8 @@ public class Block implements BlockForm {
 	}
 
 	@Override
-	public void build(World world, MeshProvider provider, BlockState state, int x, int y, int z) {
-		renderable.build(world, provider.getBuilder(getRenderLayer()), state, x, y, z);
+	public void build(Section section, MeshProvider provider, BlockState state, int x, int y, int z) {
+		renderable.build(section, provider.getBuilder(getRenderLayer()), state, x, y, z);
 	}
 
 	@Override

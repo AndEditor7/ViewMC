@@ -11,6 +11,7 @@ import com.andedit.viewermc.block.state.VariantJson;
 import com.andedit.viewermc.graphic.MeshBuilder;
 import com.andedit.viewermc.util.ModelSupplier;
 import com.andedit.viewermc.util.Util;
+import com.andedit.viewermc.world.Section;
 import com.andedit.viewermc.world.World;
 import com.badlogic.gdx.math.collision.BoundingBox;
 
@@ -27,11 +28,11 @@ public class Variants implements Renderable {
 	}
 
 	@Override
-	public void build(World world, MeshBuilder builder, BlockState state, int x, int y, int z) {
+	public void build(Section section, MeshBuilder builder, BlockState state, int x, int y, int z) {
 		for (int i = 0; i < variants.size(); i++) {
 			var variant = variants.get(i);
 			if (variant.test(state)) {
-				variant.build(world, builder, state, x, y, z);
+				variant.build(section, builder, state, x, y, z);
 				return;
 			}
 		}
@@ -86,8 +87,8 @@ public class Variants implements Renderable {
 		}
 		
 		@Override
-		public void build(World world, MeshBuilder builder, BlockState state, int x, int y, int z) {
-			models.apply((int)Util.hashCode(x, y, z)).build(world, builder, state, x, y, z);
+		public void build(Section section, MeshBuilder builder, BlockState state, int x, int y, int z) {
+			models.apply((int)Util.hashCode(x, y, z)).build(section, builder, state, x, y, z);
 		}
 
 		@Override

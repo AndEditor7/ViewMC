@@ -123,7 +123,8 @@ public class Region {
 					continue;
 				}
 				raf.seek(4096 * offset + 4); //+4: skip data size
-				var chunk = new Chunk(raf, blocks, i & 31, i >> 5);
+				var chunk = new Chunk(raf, blocks, (i & 31) + (x>>4), (i >> 5) + (z>>4));
+				chunk.init(world);
 				chunks[i] = chunk;
 			}
 		}

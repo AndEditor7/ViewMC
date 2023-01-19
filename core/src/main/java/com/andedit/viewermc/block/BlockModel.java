@@ -20,6 +20,7 @@ import com.andedit.viewermc.util.IntsFunction;
 import com.andedit.viewermc.util.TexReg;
 import com.andedit.viewermc.util.Util;
 import com.andedit.viewermc.world.Lights;
+import com.andedit.viewermc.world.Section;
 import com.andedit.viewermc.world.World;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.MathUtils;
@@ -110,9 +111,9 @@ public class BlockModel implements Iterable<Quad> {
 		return this;
 	}
 	
-	public void build(World world, MeshBuilder builder, BlockState state, int x, int y, int z) {
+	public void build(Section section, MeshBuilder builder, BlockState state, int x, int y, int z) {
 		for (int i=0,s=quads.size(); i < s; i++) {
-			quads.get(i).build(world, builder, state, x, y, z);
+			quads.get(i).build(section, builder, state, x, y, z);
 		}
 	}
 	
@@ -277,7 +278,7 @@ public class BlockModel implements Iterable<Quad> {
 			rotateTex(value.rotation);
 		}
 
-		public void build(World world, MeshBuilder builder, BlockState state, int x, int y, int z) {
+		public void build(Section section, MeshBuilder builder, BlockState state, int x, int y, int z) {
 			List<Quad> quads = builder.quads;
 			quads.clear();
 			
@@ -286,13 +287,13 @@ public class BlockModel implements Iterable<Quad> {
 				//if (World.isOutBound(off)) {
 					//return;
 				//}
-				var nState = world.getBlockState(x+face.xOffset, y+face.yOffset, z+face.zOffset);
+				var nState = section.getBlockStateAt(x+face.xOffset, y+face.yOffset, z+face.zOffset);
 				if (!state.canRender(nState, face, x, y, z)) return;
 				nState.getQuads(quads, x+face.xOffset, y+face.yOffset, z+face.zOffset);
 			}
 			
 			if (canRender(quads)) {
-				render(world, builder, state, x, y, z);
+				render(section, builder, state, x, y, z);
 			}
 		}
 		
@@ -357,10 +358,10 @@ public class BlockModel implements Iterable<Quad> {
 			return true;
 		}
 		
-		void render(World world, MeshBuilder builder, BlockState state, int x, int y, int z) {
+		void render(Section section, MeshBuilder builder, BlockState state, int x, int y, int z) {
 			final float xf = x, yf = y, zf = z;
 			float shadeLight;
-			builder.setColor(tintIndex == -1 ? Color.WHITE_FLOAT_BITS : BlockColors.getColorFloat(state, world, x, y, z, tintIndex));
+			builder.setColor(tintIndex == -1 ? Color.WHITE_FLOAT_BITS : BlockColors.getColorFloat(state, section.getWorld(), x, y, z, tintIndex));
 			
 			shadeLight = shade ? Lighting.getShade(face) : 1;
 			
@@ -369,7 +370,7 @@ public class BlockModel implements Iterable<Quad> {
 			int y0 = y + getOffset(Axis.Y);
 			int z0 = z + getOffset(Axis.Z);
 			
-			int light = world.getLight(x0, y0, z0);
+			int light = section.getLightAt(x0, y0, z0);
 			
 			//if (false) {
 			if (ao && face != null) { // ambient occlusion mode
@@ -394,22 +395,22 @@ public class BlockModel implements Iterable<Quad> {
 					int x2 = (aSign*rightFace.axis.getInt(Axis.X)) + (bSign*upFace.axis.getInt(Axis.X));
 					int y2 = (aSign*rightFace.axis.getInt(Axis.Y)) + (bSign*upFace.axis.getInt(Axis.Y));
 					int z2 = (aSign*rightFace.axis.getInt(Axis.Z)) + (bSign*upFace.axis.getInt(Axis.Z));
-					boolean state1 = world.getBlockState(x1+x2, y1+y2, z1+z2).isFullOpque(x1+x2, y1+y2, z1+z2);
-					int lit = world.getLight(x0+x2, y0+y2, z0+z2);
+					boolean state1 = section.getBlockStateAt(x1+x2, y1+y2, z1+z2).isFullOpque(x1+x2, y1+y2, z1+z2);
+					int lit = section.getLightAt(x0+x2, y0+y2, z0+z2);
 					x2 = aSign*rightFace.axis.getInt(Axis.X);
 					y2 = aSign*rightFace.axis.getInt(Axis.Y);
 					z2 = aSign*rightFace.axis.getInt(Axis.Z);
-					boolean stateA = world.getBlockState(x1+x2, y1+y2, z1+z2).isFullOpque(x1+x2, y1+y2, z1+z2);
-					int litA = world.getLight(x0+x2, y0+y2, z0+z2);
+					boolean stateA = section.getBlockStateAt(x1+x2, y1+y2, z1+z2).isFullOpque(x1+x2, y1+y2, z1+z2);
+					int litA = section.getLightAt(x0+x2, y0+y2, z0+z2);
 					x2 = bSign*upFace.axis.getInt(Axis.X);
 					y2 = bSign*upFace.axis.getInt(Axis.Y);
 					z2 = bSign*upFace.axis.getInt(Axis.Z);
-					boolean stateB = world.getBlockState(x1+x2, y1+y2, z1+z2).isFullOpque(x1+x2, y1+y2, z1+z2);
-					int litB = world.getLight(x0+x2, y0+y2, z0+z2);
+					boolean stateB = section.getBlockStateAt(x1+x2, y1+y2, z1+z2).isFullOpque(x1+x2, y1+y2, z1+z2);
+					int litB = section.getLightAt(x0+x2, y0+y2, z0+z2);
 					
 					float dst = dst(a, b);
 					
-					int level = vertAO(world.getBlockState(x1, y1, z1).isFullOpque(x1, y1, z1), stateA, stateB, state1);
+					int level = vertAO(section.getBlockStateAt(x1, y1, z1).isFullOpque(x1, y1, z1), stateA, stateB, state1);
 					float ao = Lighting.getAmbient(level);
 					
 					float blockLight = MathUtils.lerp(calcLight(Lights.BLOCK, light, litA, litB, lit), Lights.toBlockF(light), dst);

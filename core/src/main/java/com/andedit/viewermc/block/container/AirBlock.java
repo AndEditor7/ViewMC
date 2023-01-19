@@ -6,7 +6,7 @@ import com.andedit.viewermc.block.BlockForm;
 import com.andedit.viewermc.block.BlockModel.Quad;
 import com.andedit.viewermc.block.BlockState;
 import com.andedit.viewermc.graphic.MeshProvider;
-import com.andedit.viewermc.world.World;
+import com.andedit.viewermc.world.Section;
 import com.badlogic.gdx.math.collision.BoundingBox;
 
 public class AirBlock implements BlockForm {
@@ -16,7 +16,7 @@ public class AirBlock implements BlockForm {
 	private final BlockState state = new BlockState(this);
 
 	@Override
-	public void build(World world, MeshProvider builder, BlockState state, int x, int y, int z) {
+	public void build(Section section, MeshProvider builder, BlockState state, int x, int y, int z) {
 
 	}
 

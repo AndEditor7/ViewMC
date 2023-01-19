@@ -14,6 +14,7 @@ import com.andedit.viewermc.graphic.RenderLayer;
 import com.andedit.viewermc.util.Facing;
 import com.andedit.viewermc.util.Identifier;
 import com.andedit.viewermc.util.ModelSupplier;
+import com.andedit.viewermc.world.Section;
 import com.andedit.viewermc.world.World;
 import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.utils.OrderedMap;
@@ -62,8 +63,8 @@ public class WaterBlock extends Block {
 	}
 	
 	@Override
-	public void build(World world, MeshProvider provider, BlockState state, int x, int y, int z) {
-		getModel(world, x, y, z).build(world, provider.getBuilder(getRenderLayer()), state, x, y, z);
+	public void build(Section section, MeshProvider provider, BlockState state, int x, int y, int z) {
+		getModel(section, x, y, z).build(section, provider.getBuilder(getRenderLayer()), state, x, y, z);
 	}
 
 	@Override
@@ -86,7 +87,7 @@ public class WaterBlock extends Block {
 		return false;
 	}
 	
-	private BlockModel getModel(World world, int x, int y, int z) {
-		return world.getBlockState(x, y+1, z).isOf(this) ? fullModel : haftModel;
+	private BlockModel getModel(Section section, int x, int y, int z) {
+		return section.getBlockStateAt(x, y+1, z).isOf(this) ? fullModel : haftModel;
 	}
 }

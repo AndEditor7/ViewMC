@@ -69,7 +69,7 @@ public class WorldRenderer implements Disposable {
 						mesh = new Mesh(this, section, x, y, z);
 						meshes.add(mesh);
 					}
-					if (!mesh.build(world, provider)) {
+					if (!mesh.build(provider)) {
 						break loop;
 					}
 				}

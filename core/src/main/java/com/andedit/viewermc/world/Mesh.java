@@ -38,7 +38,7 @@ public class Mesh implements Disposable {
 	}
 	
 	/** @return is empty after build. */
-	public boolean build(World world, MeshProvider provider) {
+	public boolean build(MeshProvider provider) {
 		int xPos = x<<4;
 		int yPos = y<<4;
 		int zPos = z<<4;
@@ -46,13 +46,13 @@ public class Mesh implements Disposable {
 		for (int x = 0; x < Section.SIZE; x++)
 		for (int y = 0; y < Section.SIZE; y++)
 		for (int z = 0; z < Section.SIZE; z++) {
-			var state = world.getBlockState(xPos+x, yPos+y, zPos+z);
-			state.build(world, provider, xPos+x, yPos+y, zPos+z);
+			var state = section.getBlockState(x, y, z);
+			state.build(section, provider, xPos+x, yPos+y, zPos+z);
 		}
 		
 		// this looks bad.
 		isEmpty = provider.isEmpty();
-		build(provider);
+		provider.build(verts);
 		return isEmpty;
 	}
 	
@@ -92,10 +92,6 @@ public class Mesh implements Disposable {
 	
 	public boolean isEmpty(RenderLayer layer) {
 		return verts.get(layer).isEmpty();
-	}
-	
-	public void build(MeshProvider provider) {
-		provider.build(verts);
 	}
 	
 	public boolean isEmpty() {

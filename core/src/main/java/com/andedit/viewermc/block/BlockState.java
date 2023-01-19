@@ -5,6 +5,7 @@ import java.util.Collection;
 import com.andedit.viewermc.block.BlockModel.Quad;
 import com.andedit.viewermc.graphic.MeshProvider;
 import com.andedit.viewermc.util.Facing;
+import com.andedit.viewermc.world.Section;
 import com.andedit.viewermc.world.World;
 import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.utils.Null;
@@ -62,8 +63,8 @@ public class BlockState {
 		return props.containsKey(key);
 	}
 	
-	public void build(World world, MeshProvider builder, int x, int y, int z) {
-		block.build(world, builder, this, x, y, z);
+	public void build(Section section, MeshProvider builder, int x, int y, int z) {
+		block.build(section, builder, this, x, y, z);
 	}
 	
 	public void getQuads(Collection<Quad> collection, int x, int y, int z) {

@@ -4,13 +4,13 @@ import java.util.Collection;
 
 import com.andedit.viewermc.block.BlockForm;
 import com.andedit.viewermc.block.BlockModel;
+import com.andedit.viewermc.block.BlockModel.Quad;
 import com.andedit.viewermc.block.BlockState;
 import com.andedit.viewermc.block.TextureAtlas;
 import com.andedit.viewermc.graphic.MeshProvider;
 import com.andedit.viewermc.graphic.RenderLayer;
-import com.andedit.viewermc.block.BlockModel.Quad;
 import com.andedit.viewermc.util.Identifier;
-import com.andedit.viewermc.world.World;
+import com.andedit.viewermc.world.Section;
 import com.badlogic.gdx.math.collision.BoundingBox;
 
 public class TestBlock implements BlockForm {
@@ -24,8 +24,8 @@ public class TestBlock implements BlockForm {
 	}
 	
 	@Override
-	public void build(World world, MeshProvider provider, BlockState state, int x, int y, int z) {
-		model.build(world, provider.getBuilder(RenderLayer.SOILD), state, x, y, z);
+	public void build(Section section, MeshProvider provider, BlockState state, int x, int y, int z) {
+		model.build(section, provider.getBuilder(RenderLayer.SOILD), state, x, y, z);
 	}
 
 	@Override
