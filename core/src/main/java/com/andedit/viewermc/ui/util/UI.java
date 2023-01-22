@@ -8,8 +8,6 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 public interface UI {
 	void bind(Stage stage);
 	
-	void setVisible(boolean visible);
-	
 	default void resize(Viewport view) {
 		
 	}

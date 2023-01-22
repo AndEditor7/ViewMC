@@ -66,7 +66,7 @@ public class DesktopController extends InputAdapter implements GameController {
 
 	@Override
 	public Vector2 getLook() {
-		return look.set(delta.x * 0.3f, -delta.y * 0.3f);
+		return look.set(delta.x * 0.25f, -delta.y * 0.25f);
 	}
 
 	//@Override

@@ -5,10 +5,12 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import com.andedit.viewermc.block.BlockModel.Quad;
+import com.andedit.viewermc.GameCore;
 import com.andedit.viewermc.block.Blocks;
 import com.andedit.viewermc.graphic.vertex.Vertex;
 import com.andedit.viewermc.util.TexReg;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.FloatArray;
@@ -20,9 +22,6 @@ import com.badlogic.gdx.utils.NumberUtils;
 // v4-----v1
 /** pos,uv,col,dat */
 public class MeshBuilder implements VertConsumer {
-	
-	/** A cached ArrayList instance for storing quads temporary. */
-	public final ArrayList<Quad> quads = new ArrayList<>();
 	
 	public final Blocks blocks;
 	
@@ -176,7 +175,111 @@ public class MeshBuilder implements VertConsumer {
 		return itr;
 	}
 	
+	public void clear() {
+		array.clear();
+	}
+	
 	public static float toData(float ambientLight, float blockLight, float skyLight) {
-		return Color.toFloatBits(ambientLight, blockLight, skyLight, 0);
+		if (GameCore.rendering.lighting) {
+			return Color.toFloatBits(ambientLight, blockLight, skyLight, 0);
+		} else {
+			return Color.toFloatBits(MathUtils.lerp(ambientLight, 1.0f, 0.2f), 1, 1, 1);
+		}
+	}
+	
+	/* A cached instances temporary uses. */
+	
+	public final BoolGrid aoGrid = new BoolGrid();
+	public final IntGrid litGrid = new IntGrid();
+	public final FloatGrid aoGridF = new FloatGrid();
+	public final FloatGrid blockLitGridF = new FloatGrid();
+	public final FloatGrid skyLitGridF = new FloatGrid();
+	
+	
+	public static class FloatGrid {
+		private final float[][] floats = new float[2][2];
+		
+		public float get(int i) {
+			return floats[i&1][i>>>1];
+		}
+		
+		public void set(float val, int i) {
+			floats[i&1][i>>>1] = val;
+		}
+		
+		public float get(int x, int y) {
+			return floats[x][y];
+		}
+		
+		public void set(float val, int x, int y) {
+			floats[x][y] = val;
+		}
+		
+		public float bilinear(float x, float y) {
+			float x0 = MathUtils.lerp(floats[0][0], floats[1][0], x);
+		    float x1 = MathUtils.lerp(floats[0][1], floats[1][1], x);
+		    return MathUtils.lerp(x0, x1, y);
+		}
+	}
+	
+	
+	public static class IntGrid {
+		private final int[][] ints = new int[3][3];
+		
+		public int get(int i) {
+			return ints[i%3][i/3];
+		}
+		
+		public void set(int val, int i) {
+			ints[i%3][i/3] = val;
+		}
+		
+		public int get(int x, int y) {
+			return ints[x+1][y+1];
+		}
+		
+		public void set(int val, int x, int y) {
+			ints[x+1][y+1] = val;
+		}
+		
+		/** getter in zero based */
+		public int getI(int x, int y) {
+			return ints[x][y];
+		}
+		
+		/** setter in zero based */
+		public void setI(int val, int x, int y) {
+			ints[x][y] = val;
+		}
+	}
+	
+	public static class BoolGrid {
+		private final boolean[][] bools = new boolean[3][3];
+		
+		public boolean get(int i) {
+			return bools[i%3][i/3];
+		}
+		
+		public void set(boolean val, int i) {
+			bools[i%3][i/3] = val;
+		}
+		
+		public boolean get(int x, int y) {
+			return bools[x+1][y+1];
+		}
+		
+		public void set(boolean val, int x, int y) {
+			bools[x+1][y+1] = val;
+		}
+		
+		/** getter in zero based */
+		public boolean getI(int x, int y) {
+			return bools[x][y];
+		}
+		
+		/** setter in zero based */
+		public void setI(boolean val, int x, int y) {
+			bools[x][y] = val;
+		}
 	}
 }

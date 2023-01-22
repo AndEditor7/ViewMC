@@ -11,18 +11,7 @@ import com.badlogic.gdx.math.collision.BoundingBox;
 
 /** Renderable Block*/
 public interface Renderable {
-	Renderable INSTANCE = new Renderable() {
-		@Override
-		public void build(Section section, MeshBuilder builder, BlockState state, int x, int y, int z) {}
-		@Override
-		public void getQuads(BlockState state, Collection<Quad> collection, int x, int y, int z) {}
-		@Override
-		public void getBoxes(BlockState state, Collection<BoundingBox> collection, int x, int y, int z) {}
-		@Override
-		public boolean isFullOpaque(BlockState state, int x, int y, int z) { return false; }
-	};
-	
-	void build(Section section, MeshBuilder builder, BlockState state, int x, int y, int z);
+	void build(Section section, MeshProvider provider, BlockState state, int x, int y, int z);
 	
 	void getQuads(BlockState state, Collection<Quad> collection, int x, int y, int z);
 	

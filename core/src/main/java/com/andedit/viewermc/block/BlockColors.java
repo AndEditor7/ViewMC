@@ -91,7 +91,7 @@ public class BlockColors {
 	}
 	
 	@Null
-	public static BlockColorProvider getProvider(BlockForm block) {
+	public static BlockColorProvider getProvider(Block block) {
 		return MAP.get(block.getId());
 	}
 	

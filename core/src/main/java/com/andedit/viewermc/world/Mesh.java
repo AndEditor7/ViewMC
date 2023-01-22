@@ -5,17 +5,15 @@ import static com.badlogic.gdx.Gdx.gl;
 import java.util.ArrayList;
 import java.util.EnumMap;
 
-import com.andedit.viewermc.graphic.MeshBuilder;
+import com.andedit.viewermc.graphic.Camera;
 import com.andedit.viewermc.graphic.MeshProvider;
 import com.andedit.viewermc.graphic.MeshVert;
 import com.andedit.viewermc.graphic.RenderLayer;
-import com.andedit.viewermc.graphic.VertConsumer;
 import com.andedit.viewermc.graphic.vertex.Vertex;
 import com.andedit.viewermc.util.Util;
+import com.andedit.viewermc.util.Vector3d;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.math.GridPoint3;
-import com.badlogic.gdx.math.Plane;
-import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Disposable;
 
 public class Mesh implements Disposable {
@@ -25,6 +23,10 @@ public class Mesh implements Disposable {
 	private final int x, y, z;
 	private boolean isEmpty;
 	
+	public Mesh(WorldRenderer render, MeshToLoad meshToLoad) {
+		this(render, meshToLoad.section, meshToLoad.chunkX, meshToLoad.chunkY, meshToLoad.chunkZ);
+	}
+	
 	public Mesh(WorldRenderer render, Section section, int x, int y, int z) {
 		this.render = render;
 		this.section = section;
@@ -33,51 +35,18 @@ public class Mesh implements Disposable {
 		this.z = z;
 		
 		verts = new EnumMap<>(RenderLayer.class);
-		verts.put(RenderLayer.SOILD, new ArrayList<>(2));
-		verts.put(RenderLayer.TRANS, new ArrayList<>(1));
+		for (var layer : RenderLayer.VALUES) {
+			verts.put(layer, new ArrayList<>(2));
+		}
 	}
 	
-	/** @return is empty after build. */
-	public boolean build(MeshProvider provider) {
-		int xPos = x<<4;
-		int yPos = y<<4;
-		int zPos = z<<4;
-		
-		for (int x = 0; x < Section.SIZE; x++)
-		for (int y = 0; y < Section.SIZE; y++)
-		for (int z = 0; z < Section.SIZE; z++) {
-			var state = section.getBlockState(x, y, z);
-			state.build(section, provider, xPos+x, yPos+y, zPos+z);
-		}
-		
-		// this looks bad.
+	public void update(MeshProvider provider) {
 		isEmpty = provider.isEmpty();
 		provider.build(verts);
-		return isEmpty;
 	}
 	
-	public boolean isVisible(final Plane[] planes) {
-		final int s = planes.length;
-		final float x, y, z;
-		x = (this.x<<4)+8;
-		y = (this.y<<4)+8;
-		z = (this.z<<4)+8;
-
-		for (int i = 2; i < s; i++) {
-			final Plane plane = planes[i];
-			final Vector3 normal = plane.normal;
-			final float dist = normal.dot(x, y, z) + plane.d;
-			
-			final float radius = 
-			8f * Math.abs(normal.x) +
-			8f * Math.abs(normal.y) +
-			8f * Math.abs(normal.z);
-
-			if (dist < radius && dist < -radius) {
-				return false;
-			}
-		}
-		return true;
+	public boolean isVisible(Camera camera) {
+		return camera.frustChunk(x, y, z);
 	}
 	
 	public void render(RenderLayer layer) {
@@ -96,6 +65,10 @@ public class Mesh implements Disposable {
 	
 	public boolean isEmpty() {
 		return isEmpty;
+	}
+	
+	public GridPoint3 getCenter(GridPoint3 grid) {
+		return grid.set((x<<4)+8, (y<<4)+8, (z<<4)+8);
 	}
 	
 	public boolean pass(GridPoint3 pos, int offset) {

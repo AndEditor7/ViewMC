@@ -1,6 +1,7 @@
 package com.andedit.viewermc.graphic;
 
 import com.andedit.viewermc.util.Util;
+import com.andedit.viewermc.util.Vector3d;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Plane;
@@ -22,6 +23,10 @@ public final class Camera extends PerspectiveCamera
 	public final Vector3 upward = new Vector3();
 	public final Vector3 down = new Vector3();
 	
+	public final Vector3d position = new Vector3d();
+	
+	private final Vector3 posF = new Vector3();
+	
 	private static final Quaternion quat = new Quaternion();
 	
 	{
@@ -33,6 +38,9 @@ public final class Camera extends PerspectiveCamera
 	/** Frustum point. */
 	public boolean frust(float x, float y, float z) {
 		final Plane[] planes = getPlanes();
+		x -= posF.x;
+		y -= posF.y;
+		z -= posF.z;
 		for (int i = 1; i < planes.length; i++) {
 			PlaneSide result = planes[i].testPoint(x, y, z);
 			if (result == PlaneSide.Back) return false;
@@ -43,6 +51,9 @@ public final class Camera extends PerspectiveCamera
 	/** Frustum sphere. */
 	public boolean frust(float x, float y, float z, float radius) {
 		final Plane[] planes = getPlanes();
+		x -= posF.x;
+		y -= posF.y;
+		z -= posF.z;
 		for (int i = 1; i < 6; i++) {
 			final Plane plane = planes[i];
 			final Vector3 normal = plane.normal;
@@ -60,6 +71,9 @@ public final class Camera extends PerspectiveCamera
 		w *= 0.5f;
 		l *= 0.5f;
 		h *= 0.5f;
+		x -= posF.x;
+		y -= posF.y;
+		z -= posF.z;
 		x += w;
 		y += l;
 		z += h;
@@ -81,6 +95,37 @@ public final class Camera extends PerspectiveCamera
 		return true;
 	}
 	
+	public boolean frustChunk(int chunkX, int chunkY, int chunkZ) {
+		final Plane[] planes = getPlanes();
+		final int s = planes.length;
+		float x, y, z;
+		x = (chunkX<<4)+8;
+		y = (chunkY<<4)+8;
+		z = (chunkZ<<4)+8;
+		x -= posF.x;
+		y -= posF.y;
+		z -= posF.z;
+		x += position.floatFactX();
+		z += position.floatFactX();
+		
+		for (int i = 1; i < s; i++) {
+			final Plane plane = planes[i];
+			final Vector3 normal = plane.normal;
+			final float dist = normal.dot(x, y, z) + plane.d;
+			
+			final float radius = 
+			8f * Math.abs(normal.x) +
+			8f * Math.abs(normal.y) +
+			8f * Math.abs(normal.z);
+
+			if (dist < radius && dist < -radius) {
+				return false;
+			}
+		}
+		
+		return true;
+	}
+	
 	public Plane[] getPlanes() {
 		return frustum.planes;
 	}
@@ -90,7 +135,14 @@ public final class Camera extends PerspectiveCamera
 		viewportHeight = height;
 	}
 	
-	public void updateRotation() {
+	@Override
+	public void update(boolean updateFrustum) {
+		updateRotation();
+		super.update(updateFrustum);
+		position.toVecF(posF);
+	}
+	
+	private void updateRotation() {
 		pitch = MathUtils.clamp(pitch, -90f, 90f);
 		yaw = Util.modAngle(yaw);
 		

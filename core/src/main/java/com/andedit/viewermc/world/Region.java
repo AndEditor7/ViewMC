@@ -1,6 +1,8 @@
 package com.andedit.viewermc.world;
 
 import java.io.RandomAccessFile;
+import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicReferenceArray;
 
 import com.andedit.viewermc.biome.Biome;
 import com.andedit.viewermc.biome.Biomes;
@@ -10,8 +12,6 @@ import com.andedit.viewermc.block.container.AirBlock;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.utils.Null;
 
-import net.querz.mca.MCAFile;
-
 /** Chunk Region, AKA MCA */
 public class Region {
 	
@@ -20,13 +20,26 @@ public class Region {
 	public final World world;
 	public final int x, z;
 	
-	private final Chunk[] chunks;
+	private final AtomicReferenceArray<Chunk> chunks;
+	private final boolean[] chunksToLoad;
 	
 	public Region(World world, int x, int z) {
 		this.world = world;
 		this.x = x;
 		this.z = z;
-		chunks = new Chunk[SIZE * SIZE];
+		chunks = new AtomicReferenceArray<>(SIZE * SIZE);
+		chunksToLoad = new boolean[SIZE * SIZE];
+		Arrays.fill(chunksToLoad, true);
+	}
+	
+	public void update(int chunkX, int chunkZ) {
+		for (int i = 0; i < chunks.length(); i++) {
+			var chunk = chunks.get(i);
+			if (chunk != null && chunk.pass(chunkX, chunkZ)) {
+				chunks.set(i, null);
+				chunksToLoad[i] = true;
+			}
+		}
 	}
 	
 	/**
@@ -101,11 +114,43 @@ public class Region {
 	}
 	
 	@Null
-	public Chunk getChunk(int x, int y) {
-		if (x < 0 || y < 0 || x >= SIZE || y >= SIZE) {
+	public Chunk getChunk(int x, int z) {
+		if (x < 0 || z < 0 || x >= SIZE || z >= SIZE) {
 			return null;
 		}
-		return chunks[MCAFile.getChunkIndex(x, y)];
+		return chunks.get(x + (z << 5));
+	}
+	
+	public boolean shouldLoadChunk(int x, int z) {
+		if (x < 0 || z < 0 || x >= SIZE || z >= SIZE) {
+			throw new ArrayIndexOutOfBoundsException();
+		}
+		return chunksToLoad[x + (z << 5)];
+	}
+	
+	public void setChunkToLoad(boolean bool, int x, int z) {
+		if (x < 0 || z < 0 || x >= SIZE || z >= SIZE) {
+			throw new ArrayIndexOutOfBoundsException();
+		}
+		chunksToLoad[x + (z << 5)] = bool;
+	}
+	
+	void putChunk(Chunk chunk) {
+		chunks.set(chunk.getIndex(), chunk);
+		chunksToLoad[chunk.getIndex()] = false;
+	}
+	
+	public boolean pass(int chunkX, int chunkZ) {
+		chunkX >>= 5;
+		chunkZ >>= 5;
+		final int rad = (WorldRenderer.RADIUS_H + World.DELETE_CHUNK_OFFSET) >> 5;
+		if (x+1 < (-rad)+chunkX 
+		|| z+1 < (-rad)+chunkZ 
+		|| x-1 > rad+chunkX 
+		|| z-1 > rad+chunkZ) {
+			return true;
+		}
+		return false;
 	}
 	
 	public boolean equals(int x, int z) {
@@ -125,10 +170,8 @@ public class Region {
 				raf.seek(4096 * offset + 4); //+4: skip data size
 				var chunk = new Chunk(raf, blocks, (i & 31) + (x>>4), (i >> 5) + (z>>4));
 				chunk.init(world);
-				chunks[i] = chunk;
+				chunks.set(i, chunk);
 			}
 		}
 	}
-
-	
 }

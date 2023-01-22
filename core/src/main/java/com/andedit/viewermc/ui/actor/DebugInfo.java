@@ -1,0 +1,75 @@
+package com.andedit.viewermc.ui.actor;
+
+import static com.andedit.viewermc.Assets.blank;
+import static com.andedit.viewermc.Assets.font;
+import static com.andedit.viewermc.util.Util.floor;
+import static com.badlogic.gdx.Gdx.graphics;
+
+import com.andedit.viewermc.GameCore;
+import com.andedit.viewermc.ui.util.Alignment;
+import com.andedit.viewermc.ui.util.PosOffset;
+import com.badlogic.gdx.graphics.g2d.Batch;
+import com.badlogic.gdx.graphics.g2d.BitmapFontCache;
+import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.utils.Align;
+
+import net.querz.mca.MCAUtil;
+
+public class DebugInfo extends Actor implements Alignment {
+	
+	private final GameCore core;
+	private final StringBuilder builder;
+	private final BitmapFontCache cache;
+	
+	public DebugInfo(GameCore core) {
+		this.core = core;
+		this.builder = new StringBuilder();
+		this.cache = new BitmapFontCache(font);
+		setUserObject(new PosOffset(0, 1, 2, -2));
+	}
+
+	@Override
+	public void draw(Batch batch, float parentAlpha) {
+		int i = 0;
+		builder.append("MC Viewer. ").append("Rendering Mode: ").append(GameCore.rendering);
+		drawText(batch, i++);
+		
+		var totalMem = Runtime.getRuntime().totalMemory();
+		var freeMem = Runtime.getRuntime().freeMemory();
+		builder.append(graphics.getFramesPerSecond()).append(" FPS, ");
+		builder.append("Memory: ").append(Math.round((freeMem / (double)totalMem) * 100d)).append("% ").append(freeMem / 1024 / 1024).append('/').append(totalMem / 1024 / 1024).append("mb");
+		drawText(batch, i++);
+		
+		//builder.append("Renderer: ").append(graphics.getGLVersion().getVendorString());
+		//drawText(batch, 2);
+		
+		i++;
+		var camPos = core.camera.position;
+		int x = camPos.floorX();
+		int y = camPos.floorY();
+		int z = camPos.floorZ();
+		
+		builder.append("Block: ").append(x).append(" / ").append(y).append(" / ").append(z);
+		drawText(batch, i++);
+		builder.append("Chunk: ").append(x>>4).append(" / ").append(y>>4).append(" / ").append(z>>4);
+		builder.append(" [").append((x>>4)&31).append(' ').append((z>>4)&31).append(" in ");
+		builder.append(MCAUtil.createNameFromRegionLocation(x>>9, z>>9)).append(']');
+		drawText(batch, i++);
+		//drawText(batch, 1);
+	}
+	
+	void drawText(Batch batch, int line) {
+		float y = getY() - (line * 9);
+		var layout = cache.setText(builder, getX(), y);
+		batch.setColor(0, 0, 0, 0.3f);
+		batch.draw(blank, getX() - 1, y - 8, layout.width+2, layout.height + 2);
+		batch.setColor(getColor());
+		cache.draw(batch);
+		builder.setLength(0);
+	}
+
+	@Override
+	public int getAlign() {
+		return Align.topLeft;
+	}
+}

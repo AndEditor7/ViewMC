@@ -25,7 +25,7 @@ public class Biomes {
 		put("old_growth_pine_taiga", new Biome(0.3f, 0.8f, 0x7CA3FF));
 		put("old_growth_spruce_taiga", new Biome(0.25f, 0.8f, 0x7DA3FF));
 		put("taiga", new Biome(0.25f, 0.8f, 0x7DA3FF));
-		put("snowy_taiga", new Biome(-0.5f, 0.4f, 0x839EFF));
+		put("snowy_taiga", new Biome(0.2f, 0.4f, 0x839EFF));
 		put("savanna", new Biome(2.0f, 0.0f, 0x6EB1FF));
 		put("savanna_plateau", new Biome(2.0f, 0.0f, 0x6EB1FF));
 		put("windswept_hills", new Biome(0.2f, 0.3f, 0x7DA2FF));
@@ -39,10 +39,10 @@ public class Biomes {
 		put("eroded_badlands", new Biome(2.0f, 0.0f, 0x6EB1FF));
 		put("wooded_badlands", new Biome(2.0f, 0.0f, 0x6EB1FF));
 		put("meadow", new Biome(0.5f, 0.8f, 0x7BA4FF));
-		put("grove", new Biome(-0.2f, 0.8f, 0x81A0FF));
-		put("snowy_slopes", new Biome(-0.3f, 0.9f, 0x829FFF));
-		put("frozen_peaks", new Biome(-0.7f, 0.9f, 0x859DFF));
-		put("jagged_peaks", new Biome(-0.7f, 0.9f, 0x859DFF));
+		put("grove", new Biome(0.2f, 0.8f, 0x81A0FF));
+		put("snowy_slopes", new Biome(0.2f, 0.9f, 0x829FFF));
+		put("frozen_peaks", new Biome(0.2f, 0.9f, 0x859DFF));
+		put("jagged_peaks", new Biome(0.2f, 0.9f, 0x859DFF));
 		put("stony_peaks", new Biome(1.0f, 0.3f, 0x76A8FF));
 		put("river", new Biome(0.5f, 0.5f, 0x7BA4FF));
 		put("frozen_river", new Biome(0.0f, 0.5f, 0x7FA1FF));

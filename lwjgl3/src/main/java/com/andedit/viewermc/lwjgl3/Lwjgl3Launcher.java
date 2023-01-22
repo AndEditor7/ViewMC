@@ -22,12 +22,13 @@ public class Lwjgl3Launcher {
 	private static Lwjgl3ApplicationConfiguration getDefaultConfiguration() {
 		Lwjgl3ApplicationConfiguration config = new Lwjgl3ApplicationConfiguration();
 		config.setTitle("MC Viewer");
-		config.useVsync(true);
-		//config.setOpenGLEmulation(GLEmulation.ANGLE_GLES20, 3, 1);
+		config.setOpenGLEmulation(GLEmulation.GL30, 3, 2);
 		config.enableGLDebugOutput(true, System.err);
 		
 		var mode = Lwjgl3ApplicationConfiguration.getDisplayMode();
 		config.setForegroundFPS(mode.refreshRate == 60 ? 100 : 60);
+		//config.setForegroundFPS(1000);
+		//config.useVsync(false);
 		
 		// Fullscreen
 		if (false) {

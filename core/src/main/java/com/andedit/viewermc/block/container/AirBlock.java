@@ -2,18 +2,20 @@ package com.andedit.viewermc.block.container;
 
 import java.util.Collection;
 
-import com.andedit.viewermc.block.BlockForm;
+import com.andedit.viewermc.block.Block;
 import com.andedit.viewermc.block.BlockModel.Quad;
 import com.andedit.viewermc.block.BlockState;
 import com.andedit.viewermc.graphic.MeshProvider;
 import com.andedit.viewermc.world.Section;
 import com.badlogic.gdx.math.collision.BoundingBox;
 
-public class AirBlock implements BlockForm {
+public class AirBlock extends Block {
 	
 	public static final AirBlock INSTANCE = new AirBlock();
 	
-	private final BlockState state = new BlockState(this);
+	{
+		state = new BlockState(this);
+	}
 
 	@Override
 	public void build(Section section, MeshProvider builder, BlockState state, int x, int y, int z) {
@@ -33,11 +35,6 @@ public class AirBlock implements BlockForm {
 	@Override
 	public boolean isFullOpaque(BlockState state, int x, int y, int z) {
 		return false;
-	}
-
-	@Override
-	public BlockState getState() {
-		return state;
 	}
 
 	@Override

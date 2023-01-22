@@ -2,6 +2,7 @@ package com.andedit.viewermc.graphic;
 
 import static com.badlogic.gdx.Gdx.gl;
 
+import com.andedit.viewermc.GameCore;
 import com.andedit.viewermc.util.Util;
 import com.andedit.viewermc.world.World;
 import com.badlogic.gdx.graphics.Color;
@@ -12,7 +13,6 @@ import com.badlogic.gdx.graphics.VertexAttributes.Usage;
 import com.badlogic.gdx.graphics.g3d.utils.MeshBuilder;
 import com.badlogic.gdx.graphics.g3d.utils.shapebuilders.SphereShapeBuilder;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.Disposable;
 
 public final class SkyBox implements Disposable {
@@ -37,6 +37,7 @@ public final class SkyBox implements Disposable {
 	}
 	
 	public void renderSky(World world, Camera camera) {
+		if (GameCore.rendering != Rendering.MINECRAFT) return; 
 		
 		//if (world.getBlock(camera.position) == Blocks.WATER) {
 			//FOG.set(60/255f, 111/255f, 208/255f, 1.0f);
@@ -45,7 +46,7 @@ public final class SkyBox implements Disposable {
 		intsSkyCam(camera);
 		
 		var pos = camera.position;
-		var biome = world.getBiome(MathUtils.floor(pos.x), MathUtils.floor(pos.y), MathUtils.floor(pos.z));
+		var biome = world.getBiome(pos.floorX(), pos.floorY(), pos.floorZ());
 		
 		shader.bind();
 		shader.setUniformf("fogColor", TEMP.set(FOG));

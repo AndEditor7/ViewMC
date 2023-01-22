@@ -7,6 +7,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import com.andedit.viewermc.graphic.TexBinder;
+import com.andedit.viewermc.graphic.TextureBlend;
 import com.andedit.viewermc.util.ByteArrayOutput;
 import com.andedit.viewermc.util.Identifier;
 import com.andedit.viewermc.util.Pair;
@@ -39,9 +40,9 @@ public class TextureAtlas implements Disposable {
 
 	private final Pixmap atlas;
 	private final Array<Animated> animated;
-	private final ObjectMap<Identifier, TexReg> regMap;
+	private final ObjectMap<Identifier, Sprite> spriteMap;
 	
-	private final TexReg missing;
+	private final Sprite missing;
 	private TexBinder binder;
 	
 	@Null
@@ -72,24 +73,24 @@ public class TextureAtlas implements Disposable {
 		atlas.setBlending(Pixmap.Blending.None);
 		atlas.setFilter(Pixmap.Filter.NearestNeighbour);
 		
-		regMap = new ObjectMap<Identifier, TexReg>(textureIds.size);
+		spriteMap = new ObjectMap<>(textureIds.size);
 		var pixDispose = new Array<Pixmap>(textureIds.size);
 		final int idxSize = size / TEXTURE_SIZE;
 		int x=1, y=0;
 		
 		// Missing texture
 		atlas.setColor(Color.MAGENTA);
-		atlas.drawRectangle(0, 0, 8, 8);
-		atlas.drawRectangle(8, 8, 8, 8);
+		atlas.fillRectangle(0, 0, 8, 8);
+		atlas.fillRectangle(8, 8, 8, 8);
 		atlas.setColor(Color.BLACK);
-		atlas.drawRectangle(0, 8, 8, 8);
-		atlas.drawRectangle(8, 0, 8, 8);
-		missing = newReg(0, 0, size);
+		atlas.fillRectangle(0, 8, 8, 8);
+		atlas.fillRectangle(8, 0, 8, 8);
+		missing = newSprite(TextureBlend.SOILD, 0, 0, size);
 		
 		for (var pair : pixList) {
 			Identifier id = pair.left;
 			Pixmap pixmap = pair.right;
-			regMap.put(id, newReg(x, y, size));
+			spriteMap.put(id, newSprite(pixmap, x, y, size));
 			
 			var entry = texAniEntryMap.get(id);
 			if (entry != null) { // if it's an animated texture.
@@ -143,8 +144,8 @@ public class TextureAtlas implements Disposable {
 		}
 	}
 	
-	public TexReg getRegion(Identifier id) {
-		return regMap.get(id, missing); // TODO: Missing texture
+	public Sprite getSprite(Identifier id) {
+		return spriteMap.get(id, missing);
 	}
 
 	@Override
@@ -158,10 +159,40 @@ public class TextureAtlas implements Disposable {
 	}
 	
 	/** Create a new Texture Region. The parameters are just index like a tile position. */
-	private static TexReg newReg(int x, int y, float size) {
+	private static Sprite newSprite(Pixmap pixmap, int x, int y, float size) {
+		var blend = TextureBlend.SOILD;
+		
+		for (int u = 0; u < pixmap.getWidth(); u++)
+		for (int v = 0; v < pixmap.getHeight(); v++) {
+			int alpha = pixmap.getPixel(u, v) & 0xFF;
+			
+			if (alpha < 255) {
+				blend = TextureBlend.TRANSPARENT;
+				if (alpha > 3) {
+					blend = TextureBlend.TRANSLUCENT;
+					break;
+				}
+			}
+		}
+		
+		return newSprite(blend, x, y, size);
+	}
+	
+	/** Create a new Texture Region. The parameters are just index like a tile position. */
+	private static Sprite newSprite(TextureBlend blend, int x, int y, float size) {
 		x *= TEXTURE_SIZE;
 		y *= TEXTURE_SIZE;
-		return new TexReg(x/size, y/size, (x+TEXTURE_SIZE)/size, (y+TEXTURE_SIZE)/size);
+		return new Sprite(blend, new TexReg(x/size, y/size, (x+TEXTURE_SIZE)/size, (y+TEXTURE_SIZE)/size));
+	}
+	
+	public static class Sprite {
+		public final TextureBlend blend;
+		public final TexReg region;
+		
+		Sprite(TextureBlend blend, TexReg region) {
+			this.blend = blend;
+			this.region = region;
+		}
 	}
 
 	private class Animated implements Disposable {

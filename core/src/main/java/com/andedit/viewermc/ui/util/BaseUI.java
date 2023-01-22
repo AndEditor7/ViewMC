@@ -8,8 +8,6 @@ public class BaseUI implements UI {
 
 	protected final Array<Actor> actors = new Array<>();
 	protected Stage stage;
-	
-	private boolean visible;
 
 	@Override
 	public void bind(Stage stage) {
@@ -17,45 +15,8 @@ public class BaseUI implements UI {
 		this.stage = stage;
 	}
 
-	@Override
-	public void setVisible(boolean visible) {
-		this.visible = visible;
-		for (Actor actor : actors)
-			actor.setVisible(visible);
-		
-		if (visible) {
-			show();
-		} else {
-			hide();
-		}
-	}
-
-	protected final void add(Actor actor) {
+	protected final Actor add(Actor actor) {
 		actors.add(actor);
-	}
-	
-	protected final boolean isVisible() {
-		return visible;
-	}
-	
-	protected void bind() {
-		if (stage == null) return; 
-		for (Actor actor : actors) {
-			stage.addActor(actor);
-			actor.setVisible(visible);
-		}
-	}
-	
-	protected void clear() {
-		actors.forEach(Actor::remove);
-		actors.clear();
-	}
-
-	protected void show() {
-		
-	}
-
-	protected void hide() {
-
+		return actor;
 	}
 }

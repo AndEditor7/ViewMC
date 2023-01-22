@@ -40,6 +40,15 @@ public final class Util {
 		return Gdx.app.getType() == ApplicationType.Desktop;
 	}
 	
+	public static int floor(final double x) {
+		final int xi = (int)x;
+		return x < xi ? xi-1 : xi;
+	}
+	
+	public static int floor(float f) {
+		return (f >= 0 ? (int) f : (int) f - 1);
+	}
+	
 	public static int getMb() {
 		long java = Gdx.app.getJavaHeap();
 		if (isDesktop()) {
@@ -91,8 +100,10 @@ public final class Util {
         return l >> 16;
     }
 	
-	public static float hashFloat(int x, int y, int z) {
-		return Math.abs((int)(hashCode(x, y, z) & 65535)) / 65535f;
+	public static float bilinear(float num00, float num10, float num01, float num11, float x, float y) {
+		float x0 = MathUtils.lerp(num00, num10, x);
+	    float x1 = MathUtils.lerp(num01, num11, x);
+	    return MathUtils.lerp(x0, x1, y);
 	}
 
 	/** Create a new change listener using java 8 lambda. */

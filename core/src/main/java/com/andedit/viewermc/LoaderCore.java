@@ -1,39 +1,24 @@
 package com.andedit.viewermc;
 
-import static com.andedit.viewermc.Main.main;
-
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
-import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class LoaderCore<T> implements Screen {
 	
-	private final LoaderTask<T> task;
+	private final Supplier<Future<T>> supplier;
+	private final Consumer<T> consumer;
 	private Future<T> future;
 	private boolean isDone;
 	
-	public LoaderCore(Function<ExecutorService, Future<T>> function, Consumer<T> consumer) {
-		this(new LoaderTask<T>() {
-			@Override
-			public Future<T> submit(ExecutorService executor) {
-				return function.apply(executor);
-			}
-			@Override
-			public void run(T future) {
-				consumer.accept(future);
-			}
-		});
-	}
-	
-	
-	public LoaderCore(LoaderTask<T> task) {
-		this.task = task;
+	public LoaderCore(Supplier<Future<T>> supplier, Consumer<T> consumer) {
+		this.supplier = supplier;
+		this.consumer = consumer;
 	}
 
 	@Override
 	public void show() {
-		//future = task.submit(main.executor);
+		future = supplier.get();
 	}
 
 	@Override
@@ -41,7 +26,7 @@ public class LoaderCore<T> implements Screen {
 		if (isDone) return;
 		if (future.isDone()) {
 			try {
-				task.run(future.get());
+				consumer.accept(future.get());
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -52,10 +37,5 @@ public class LoaderCore<T> implements Screen {
 	@Override
 	public void resize(int width, int height) {
 		
-	}
-	
-	public static interface LoaderTask<T> {
-		Future<T> submit(ExecutorService executor);
-		void run(T future); 
 	}
 }

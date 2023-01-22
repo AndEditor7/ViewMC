@@ -4,9 +4,9 @@ import java.util.Collection;
 
 import com.andedit.viewermc.block.BlockModel.Quad;
 import com.andedit.viewermc.graphic.MeshProvider;
+import com.andedit.viewermc.util.Cull;
 import com.andedit.viewermc.util.Facing;
 import com.andedit.viewermc.world.Section;
-import com.andedit.viewermc.world.World;
 import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.utils.Null;
 import com.badlogic.gdx.utils.ObjectMap;
@@ -18,15 +18,15 @@ public class BlockState {
 	
 	private static final ObjectMap<String, String> EMPTY = new ObjectMap<String, String>(0);
 	
-	public final BlockForm block;
+	public final Block block;
 	
 	private final ObjectMap<String, String> props;
 	
-	public BlockState(BlockForm block) {
+	public BlockState(Block block) {
 		this(block, EMPTY);
 	}
 	
-	public BlockState(BlockForm block, ObjectMap<String, String> props) {
+	public BlockState(Block block, ObjectMap<String, String> props) {
 		this.block = block;
 		this.props = props;
 	}
@@ -43,14 +43,22 @@ public class BlockState {
 		}
 	}
 	
-	public boolean isOf(BlockForm block) {
+	public boolean isOf(Block block) {
 		return this.block == block;
+	}
+	
+	public boolean isWaterlogged() {
+		return block.isWaterLogged(this);
 	}
 	
 	/** Get the property value */
 	@Null
 	public String get(String key) {
 		return props.get(key);
+	}
+	
+	public String get(String key, String defaultValue) {
+		return props.get(key, defaultValue);
 	}
 	
 	/** Get the property value */
@@ -79,7 +87,7 @@ public class BlockState {
 		return block.isFullOpaque(this, x, y, z);
 	}
 	
-	public boolean canRender(BlockState secondary, Facing face, int x, int y, int z) {
-		return block.canRender(this, secondary, null, x, y, z);
+	public boolean canRender(BlockState secondary, Quad quad, Facing face, Cull cull, int x, int y, int z) {
+		return block.canRender(this, secondary, quad, face, cull, x, y, z);
 	}
 }

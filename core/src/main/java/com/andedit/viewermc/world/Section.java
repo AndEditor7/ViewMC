@@ -56,6 +56,7 @@ public class Section implements Comparable<Section> {
 			blockStates = LongArrayTag.ZERO_VALUE;
 			blockPalette = null;
 			blockBits = 0;
+			isDirty = false;
 		}
 		
 		var biomes = data.getCompoundTag("biomes");

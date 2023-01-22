@@ -1,16 +1,21 @@
 package com.andedit.viewermc.graphic;
 
+import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 
 import com.andedit.viewermc.block.Blocks;
+import com.andedit.viewermc.block.BlockModel.Quad;
 import com.andedit.viewermc.graphic.vertex.Vertex;
 import com.badlogic.gdx.graphics.GL20;
 
 public class MeshProvider {
 	private final EnumMap<RenderLayer, MeshBuilder> builders = new EnumMap<>(RenderLayer.class);
 	
+	public final Blocks blocks;
+	
 	public MeshProvider(Blocks blocks) {
+		this.blocks = blocks;
 		for (var layer : RenderLayer.VALUES) {
 			builders.put(layer, new MeshBuilder(blocks));
 		}
@@ -30,6 +35,10 @@ public class MeshProvider {
 	        }
 		}
 	}
+	
+	public void clear() {
+		builders.values().forEach(MeshBuilder::clear);
+	}
 
 	public boolean isEmpty() {
 		for (var builder : builders.values()) {
@@ -39,4 +48,8 @@ public class MeshProvider {
 		}
 		return true;
 	}
+	
+	/* A cached instances temporary uses. */
+	
+	public final ArrayList<Quad> quads = new ArrayList<>();
 }

@@ -8,11 +8,10 @@ import java.util.function.Predicate;
 import com.andedit.viewermc.block.BlockModel.Quad;
 import com.andedit.viewermc.block.state.BlockStateJson;
 import com.andedit.viewermc.block.state.VariantJson;
-import com.andedit.viewermc.graphic.MeshBuilder;
+import com.andedit.viewermc.graphic.MeshProvider;
 import com.andedit.viewermc.util.ModelSupplier;
 import com.andedit.viewermc.util.Util;
 import com.andedit.viewermc.world.Section;
-import com.andedit.viewermc.world.World;
 import com.badlogic.gdx.math.collision.BoundingBox;
 
 public class Variants implements Renderable {
@@ -28,11 +27,11 @@ public class Variants implements Renderable {
 	}
 
 	@Override
-	public void build(Section section, MeshBuilder builder, BlockState state, int x, int y, int z) {
+	public void build(Section section, MeshProvider provider, BlockState state, int x, int y, int z) {
 		for (int i = 0; i < variants.size(); i++) {
 			var variant = variants.get(i);
 			if (variant.test(state)) {
-				variant.build(section, builder, state, x, y, z);
+				variant.build(section, provider, state, x, y, z);
 				return;
 			}
 		}
@@ -87,8 +86,8 @@ public class Variants implements Renderable {
 		}
 		
 		@Override
-		public void build(Section section, MeshBuilder builder, BlockState state, int x, int y, int z) {
-			models.apply((int)Util.hashCode(x, y, z)).build(section, builder, state, x, y, z);
+		public void build(Section section, MeshProvider provider, BlockState state, int x, int y, int z) {
+			models.apply((int)Util.hashCode(x, y, z)).build(section, provider, state, x, y, z);
 		}
 
 		@Override

@@ -8,6 +8,8 @@ attribute vec4 a_color;
 attribute vec4 a_data;
 
 uniform mat4 u_projTrans;
+uniform vec3 u_camPos;
+uniform vec2 u_factPos;
 
 varying vec3 v_position;
 varying float v_ambientLight;
@@ -23,5 +25,8 @@ void main() {
 	v_texCoords = a_texCoord0;
 	v_color = a_color;
 	v_position = a_position.xyz;
-	gl_Position = u_projTrans * a_position;
+	
+	vec3 pos = (a_position.xyz - u_camPos);
+	pos.xz += u_factPos.xy;
+	gl_Position = u_projTrans * vec4(pos, a_position.w);
 }

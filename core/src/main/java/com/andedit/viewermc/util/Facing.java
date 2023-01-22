@@ -82,7 +82,6 @@ public enum Facing {
 		for (int i = 0; i < x / 90; i++) {
 			face = face.rotateX();
 		}
-		
 		for (int i = 0; i < y / 90; i++) {
 			face = face.rotateY();
 		}
@@ -90,17 +89,6 @@ public enum Facing {
 	}
 	
 	public Facing rotateX() {
-		 /*
-		return switch (this) {
-		case UP    -> SOUTH;
-		case SOUTH -> DOWN;
-		case DOWN  -> NORTH;
-		case NORTH -> UP;
-		default -> this;
-		}; 
-		 */
-		
-		// /*
 		return switch (this) {
 		case UP    -> NORTH;
 		case SOUTH -> UP;
@@ -108,22 +96,9 @@ public enum Facing {
 		case NORTH -> DOWN;
 		default -> this;
 		};
-		// */
 	}
 	
 	public Facing rotateY() {
-		
-		 /*
-		return switch (this) {
-		case SOUTH -> EAST;
-		case WEST  -> SOUTH;
-		case NORTH -> WEST;
-		case EAST  -> NORTH;
-		default -> this;
-		}; 
-		 */
-		
-		// /*
 		return switch (this) {
 		case SOUTH -> WEST;
 		case WEST  -> NORTH;
@@ -131,7 +106,6 @@ public enum Facing {
 		case EAST  -> SOUTH;
 		default -> this;
 		};
-		// */
 	}
 	
 	public boolean isPositive() {

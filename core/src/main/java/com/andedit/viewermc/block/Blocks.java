@@ -6,7 +6,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import com.andedit.viewermc.block.container.AirBlock;
-import com.andedit.viewermc.block.container.Block;
 import com.andedit.viewermc.block.container.LavaBlock;
 import com.andedit.viewermc.block.container.LeavesBlock;
 import com.andedit.viewermc.block.container.WaterBlock;
@@ -16,6 +15,7 @@ import com.andedit.viewermc.util.ByteArrayOutput;
 import com.andedit.viewermc.util.Identifier;
 import com.andedit.viewermc.util.Pair;
 import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.ObjectMap;
 import com.badlogic.gdx.utils.OrderedMap;
@@ -24,27 +24,11 @@ import com.badlogic.gdx.utils.StreamUtils;
 /** Contains block models and textures. */
 public class Blocks implements Disposable {
 	
-	private static final BlockConstructor DEFAULT_CONSTRUCTOR = Block::new;
-	private static final ObjectMap<String, BlockConstructor> CONSTRUCTOR_MAP = new ObjectMap<String, BlockConstructor>(200);
-	
-	static {
-		final var map = CONSTRUCTOR_MAP;
-		map.put("oak_leaves", LeavesBlock::new);
-		map.put("birch_leaves", LeavesBlock::new);
-		map.put("spruce_leaves", LeavesBlock::new);
-		map.put("jungle_leaves", LeavesBlock::new);
-		map.put("acacia_leaves", LeavesBlock::new);
-		map.put("dark_oak_leaves", LeavesBlock::new);
-		map.put("mangrove_leaves", LeavesBlock::new);
-		map.put("azalea_leaves", LeavesBlock::new);
-		map.put("flowering_azalea_leaves", LeavesBlock::new);
-		map.put("water", WaterBlock::new);
-		map.put("lava", LavaBlock::new);
-	}
-	
 	private final TextureAtlas textures;
 	private final Pixmap grassColors, foliageColors;
-	private final ObjectMap<String, BlockForm> idToBlock;
+	private final ObjectMap<String, Block> idToBlock;
+	private final ObjectMap<String, Block> customBlocks = new ObjectMap<>(200);
+	private final Block water;
 
 	public Blocks(ZipFile file, ObjectMap<Identifier, ZipEntry> entries, List<Pair<Identifier, BlockStateJson>> blockStates, OrderedMap<Identifier, BlockModelJson> blockModels, TextureAtlas textures) throws Exception {
 		this.textures = textures;
@@ -63,6 +47,20 @@ public class Blocks implements Disposable {
 		}
 		foliageColors = new Pixmap(bytes.array(), 0, bytes.size());
 		
+		
+		final var map = customBlocks;
+		map.put("oak_leaves", new LeavesBlock());
+		map.put("birch_leaves", new LeavesBlock());
+		map.put("spruce_leaves", new LeavesBlock());
+		map.put("jungle_leaves", new LeavesBlock());
+		map.put("acacia_leaves", new LeavesBlock());
+		map.put("dark_oak_leaves", new LeavesBlock());
+		map.put("mangrove_leaves", new LeavesBlock());
+		map.put("azalea_leaves", new LeavesBlock());
+		map.put("flowering_azalea_leaves", new LeavesBlock());
+		map.put("water", water = new WaterBlock());
+		map.put("lava", new LavaBlock());
+		
 		idToBlock = new ObjectMap<>(blockStates.size());
 		for (var pair : blockStates) {
 			var id = pair.left;
@@ -73,28 +71,40 @@ public class Blocks implements Disposable {
 		System.out.println("Block Loader Finished");
 	}
 	
-	private BlockForm createBlock(Identifier id, BlockStateJson state, OrderedMap<Identifier, BlockModelJson> blockModels) {
-		return CONSTRUCTOR_MAP.get(id.path, DEFAULT_CONSTRUCTOR).create(id, state, blockModels, textures);
+	private Block createBlock(Identifier id, BlockStateJson state, OrderedMap<Identifier, BlockModelJson> blockModels) {
+		var block = customBlocks.get(id.path);
+		if (block == null) {
+			block = new Block();
+		}
+		
+		block.init(id);
+		block.loadModel(state, blockModels, textures);
+		
+		return block;
 	}
 	
-	public BlockForm toBlock(String id) {
+	public Block toBlock(String id) {
 		var block = idToBlock.get(id);
 		return block == null ? AirBlock.INSTANCE : block;
+	}
+	
+	public Block getWaterBlock() {
+		return water;
 	}
 	
 	public int getGrassColor(float temperature, float humidity) {
         int y = (int)((1f - (humidity * temperature)) * 255f);
         int x = (int)((1f - temperature) * 255f);
-        if ((y << 8 | x) < 65536) {
-        	return grassColors.getPixel(x, y) >>> 8;
+        if (y > grassColors.getHeight() || x > grassColors.getWidth()) {
+        	return 0xFFFFFFFF;
         }
-        return -65281;
+        return grassColors.getPixel(x, y) >>> 8;
     }
 	
 	public int getFoliageColor(float temperature, float humidity) {
         int y = (int)((1f - (humidity * temperature)) * 255f);
         int x = (int)((1f - temperature) * 255f);
-        if ((y << 8 | x) < 65536) {
+        if (((y << 8) | x) < 65536) {
         	return foliageColors.getPixel(x, y) >>> 8;
         }
         return 4764952;
@@ -122,5 +132,7 @@ public class Blocks implements Disposable {
 		textures.dispose();
 		grassColors.dispose();
 		foliageColors.dispose();
+		idToBlock.clear();
+		customBlocks.clear();
 	}
 }

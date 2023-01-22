@@ -26,7 +26,9 @@ public class Chunk {
 	public final int worldX, worldZ;
 	public byte min;
 	
-	public Chunk(RandomAccessFile raf, Blocks blocks, int worldX, int worldZ) throws Exception {
+	private volatile World world;
+	
+	public Chunk(RandomAccessFile raf, Blocks blocks, int worldX, int worldZ) throws IOException {
 		this.sections = new Array<>(30);
 		this.worldX = worldX;
 		this.worldZ = worldZ;
@@ -57,10 +59,20 @@ public class Chunk {
 		min = sections.first().y;
 	}
 	
+	public boolean canBuild() {
+		var world = this.world;
+		return world.getChunk(worldX+1, worldZ) != null && world.getChunk(worldX-1, worldZ) != null && world.getChunk(worldX, worldZ+1) != null && world.getChunk(worldX, worldZ-1) != null;
+	}
+	
 	public void init(World world) {
+		this.world = world;
 		for (var section : sections) {
 			section.init(world, this);
 		}
+	}
+	
+	public boolean isEmpty() {
+		return sections.isEmpty();
 	}
 	
 	public int localX() {
@@ -69,6 +81,10 @@ public class Chunk {
 	
 	public int localZ() {
 		return worldZ & 31;
+	}
+	
+	public int getIndex() {
+		return localX() + (localZ() << 5);
 	}
 	
 	/**
@@ -149,5 +165,10 @@ public class Chunk {
 	public Section getSection(int y) {
 		y -= min;
 		return y < 0 || y >= sections.size ? null : sections.get(y);
+	}
+
+	public boolean pass(int chunkX, int chunkZ) {
+		final int rad = WorldRenderer.RADIUS_H + World.DELETE_CHUNK_OFFSET;
+		return worldX <= (-rad)+chunkX|| worldZ <= (-rad)+chunkZ || worldX > rad+chunkX || worldZ > rad+chunkZ;
 	}
 }
