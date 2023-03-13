@@ -52,7 +52,7 @@ configure(subprojects) {
 
 subprojects {
 	version = '0.0.1'
-	ext.appName = 'ViewerMC'
+	ext.appName = 'ViewMC'
 	repositories {
 		mavenCentral()
 		maven { url 'https://s01.oss.sonatype.org' }
@@ -64,4 +64,4 @@ subprojects {
 	}
 }
 
-eclipse.project.name = 'ViewerMC' + '-parent'
+eclipse.project.name = 'ViewMC' + '-parent'

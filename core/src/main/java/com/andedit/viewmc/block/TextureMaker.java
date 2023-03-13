@@ -1,0 +1,162 @@
+package com.andedit.viewmc.block;
+
+import static com.andedit.viewmc.block.TextureAtlas.TEXTURE_SIZE;
+
+import com.andedit.viewmc.block.TextureAtlas.Animated;
+import com.andedit.viewmc.block.TextureAtlas.Sprite;
+import com.andedit.viewmc.graphic.TextureBlend;
+import com.andedit.viewmc.resource.RawResources;
+import com.andedit.viewmc.util.Identifier;
+import com.andedit.viewmc.util.Pair;
+import com.andedit.viewmc.util.Progress;
+import com.andedit.viewmc.util.TexReg;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.ObjectMap;
+
+class TextureMaker {
+	
+	private final Pixmap atlas;
+	private final int width, height;
+	private final int idxWidth, idxHeight;
+	
+	private final boolean[][] isFilled;
+	private int x, y;
+	
+	TextureMaker(int width, int height) {
+		this.atlas = new Pixmap(width, height, Pixmap.Format.RGBA8888);
+		this.atlas.setBlending(Pixmap.Blending.None);
+		this.atlas.setFilter(Pixmap.Filter.NearestNeighbour);
+		this.width = width;
+		this.height = height;
+		this.idxWidth = width / TEXTURE_SIZE;
+		this.idxHeight = height / TEXTURE_SIZE;
+		this.isFilled = new boolean[idxWidth][idxHeight];
+	}
+	
+	public Pair<Pixmap, ObjectMap<Identifier, Sprite>> build(RawResources assets, Array<Pair<Identifier, Pixmap>> pixList, Array<Animated> animatedList, TextureAtlas textures, Progress progress) {
+		var spriteMap = new ObjectMap<Identifier, Sprite>(assets.blockTextures.size);
+		var pixDispose = new Array<Pixmap>(assets.blockTextures.size);
+		
+		// Missing texture
+		atlas.setColor(Color.MAGENTA);
+		atlas.fillRectangle(0, 0, 8, 8);
+		atlas.fillRectangle(8, 8, 8, 8);
+		atlas.setColor(Color.BLACK);
+		atlas.fillRectangle(0, 8, 8, 8);
+		atlas.fillRectangle(8, 0, 8, 8);
+		spriteMap.put(new Identifier("missing"), new Sprite(TextureBlend.SOILD, new TexReg(0, 0, TEXTURE_SIZE/(float)width, TEXTURE_SIZE/(float)height)));
+		isFilled[0][0] = true;
+		x++;
+		
+		progress.setStatus("Generating Texture Atlas");
+		progress.newStep(pixList.size);
+		for (var pair : pixList) {
+			Identifier id = pair.left;
+			Pixmap pixmap = pair.right;
+			progress.incStep();
+			
+			//System.out.println(id);
+			//spriteMap.put(id, newSprite(pixmap, x, y, size));
+			
+			int width, height;
+			var json = assets.blockTextureMetas.get(id);
+			if (json != null) { // if it's an animated texture.
+				width = height = pixmap.getWidth() / TEXTURE_SIZE;
+			} else {
+				width = pixmap.getWidth() / TEXTURE_SIZE;
+				height = pixmap.getHeight() / TEXTURE_SIZE;
+				pixDispose.add(pixmap);
+			}
+			width = Math.max(width, 1);
+			height = Math.max(height, 1);
+			
+			int x0 = x, y0 = y;
+			
+			while (true) {
+				if (isValidSpot(x0, y0, width, height)) {
+					if (json != null) { // if it's an animated texture.
+						spriteMap.put(id, newSprite(pixmap, pixmap.getWidth(), x0, y0));
+						var animated = textures.new Animated(pixmap, x0, y0, json);
+						animatedList.add(animated);
+					} else {
+						spriteMap.put(id, newSprite(pixmap, pixmap.getHeight(), x0, y0));
+						atlas.drawPixmap(pixmap, x0 * TEXTURE_SIZE, y0 * TEXTURE_SIZE);
+					}
+					
+					for (int xF = 0; xF < width; xF++)
+					for (int yF = 0; yF < height; yF++) {
+						isFilled[x0+xF][y0+yF] = true;
+					}
+					break;
+				}
+				
+				x0++;
+				if (x0 >= idxWidth) {
+					x0 = 0; y0++;
+					if (y0 >= idxHeight) {
+						throw new RuntimeException();
+					}
+				}
+			}
+			
+			x++;
+			if (x >= idxWidth) {
+				x = 0; y++;
+				if (y >= idxHeight) {
+					throw new RuntimeException();
+				}
+			}
+		}
+		
+		pixDispose.forEach(Pixmap::dispose);
+		atlas.setFilter(Pixmap.Filter.NearestNeighbour);
+		
+		return new Pair<>(atlas, spriteMap);
+	}
+	
+	private boolean isValidSpot(int x, int y, int width, int height) {
+		if (x+width > idxWidth) {
+			return false;
+		}
+		
+		for (int x0 = 0; x0 < width; x0++)
+		for (int y0 = 0; y0 < height; y0++) {
+			if (isFilled[x+x0][y+y0]) {
+				return false;
+			}
+		}
+		
+		return true;
+	}
+	
+	/** Create a new Texture Region. The parameters are just index like a tile position. */
+	private Sprite newSprite(Pixmap pixmap, int height, int x, int y) {
+		var blend = TextureBlend.SOILD;
+		
+		for (int u = 0; u < pixmap.getWidth(); u++)
+		for (int v = 0; v < pixmap.getHeight(); v++) {
+			int alpha = pixmap.getPixel(u, v) & 0xFF;
+			
+			if (alpha < 255) {
+				blend = TextureBlend.TRANSPARENT;
+				if (alpha > 3) {
+					blend = TextureBlend.TRANSLUCENT;
+					break;
+				}
+			}
+		}
+		
+		return newSprite(pixmap, blend, height, x, y);
+	}
+	
+	/** Create a new Texture Region. The parameters are just index like a tile position. */
+	private Sprite newSprite(Pixmap pixmap, TextureBlend blend, int height, int x, int y) {
+		x *= TEXTURE_SIZE;
+		y *= TEXTURE_SIZE;
+		final float w = width;
+		final float h = this.height;
+		return new Sprite(blend, new TexReg(x/w, y/h, (x+pixmap.getWidth())/w, (y+height)/h));
+	}
+}
