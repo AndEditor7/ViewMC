@@ -6,7 +6,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -63,7 +62,7 @@ public class ZipLoader implements Closeable {
 				if (filter.test(name)) {
 					var map = entryMap.get(filter.key);
 					if (map == null) {
-						map = new OrderedMap<>(800);
+						map = new OrderedMap<>(700, 0.7f);
 						entryMap.put(filter.key, map);
 					}
 					map.put(filter.apply(name), entry);

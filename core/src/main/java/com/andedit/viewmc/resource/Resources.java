@@ -17,6 +17,7 @@ import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.ObjectMap;
 import com.badlogic.gdx.utils.OrderedMap;
+import com.badlogic.gdx.utils.OrderedSet;
 
 /** Contains block models and textures. */
 public class Resources implements Disposable {
@@ -83,7 +84,7 @@ public class Resources implements Disposable {
 		try {
 			block.loadModel(state, blockModels, textures);
 		} catch (Exception e) {
-			LOGGER.info("Error from generating the block: " + id);
+			LOGGER.info("Failed to generate block " + id, e);
 			block = new MissingBlock();
 			block.init(id);
 			block.loadModel(state, blockModels, textures);
@@ -132,8 +133,8 @@ public class Resources implements Disposable {
 	}
 	
 	/** Only update if the texture is binded. */
-	public void update() {
-		textures.update();
+	public void update(OrderedSet<Identifier> textureToAnimate) {
+		textures.update(textureToAnimate);
 	}
 
 	@Override

@@ -2,6 +2,7 @@ package com.andedit.viewmc.ui.actor;
 
 import com.andedit.viewmc.Assets;
 import com.andedit.viewmc.MenuCore;
+import com.andedit.viewmc.loader.ModType;
 import com.andedit.viewmc.resource.Core;
 import com.andedit.viewmc.resource.ResourcePacker;
 import com.andedit.viewmc.resource.ResourcePacker.ModSection;
@@ -82,11 +83,25 @@ public class ModInfo extends Widget {
 		title.setText(builder.append(data.getTitle()).append(" (").append(data.getType()).append(')'), 0, 0, getWidth()-35, Align.left, "...");
 		builder.setLength(0);
 		builder.append(data.getVersion()).append('\n');
-		builder.append("By ");
-		for (var name : data.getAuthors()) {
-			builder.append(name).append(", ");
+		
+		if (data.getType() == ModType.QUILT) {
+			if (!data.getQuiltContributors().isEmpty()) {
+				builder.append("By ");
+				for (var pair : data.getQuiltContributors()) {
+					builder.append(pair.left).append(", ");
+				}
+				builder.setLength(Math.max(builder.length()-2, 0));
+			}
+		} else {
+			if (!data.getAuthors().isEmpty()) {
+				builder.append("By ");
+				for (var name : data.getAuthors()) {
+					builder.append(name).append(", ");
+				}
+				builder.setLength(Math.max(builder.length()-2, 0));
+			}
 		}
-		builder.setLength(Math.max(builder.length()-2, 0));
+		
 		desc.setText(builder, 0, 0, getWidth()-35, Align.left, "...");
 	}
 

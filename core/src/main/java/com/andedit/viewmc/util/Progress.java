@@ -17,7 +17,7 @@ public class Progress {
 	private volatile double pre;
 	
 	public void newProgess(int totalTask) {
-		this.totalTask = totalTask + 1;
+		this.totalTask = totalTask;
 		taskFinished = -1;
 		totalStep = 1;
 		stepFinished = 0;

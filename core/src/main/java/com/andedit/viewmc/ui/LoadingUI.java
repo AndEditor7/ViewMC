@@ -3,18 +3,18 @@ package com.andedit.viewmc.ui;
 import static com.andedit.viewmc.Main.main;
 import static com.badlogic.gdx.Gdx.graphics;
 
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
 import com.andedit.viewmc.Assets;
 import com.andedit.viewmc.GameCore;
 import com.andedit.viewmc.MenuCore;
 import com.andedit.viewmc.Statics;
+import com.andedit.viewmc.resource.ResourceLoader;
 import com.andedit.viewmc.resource.ResourcePacker;
 import com.andedit.viewmc.resource.Resources;
+import com.andedit.viewmc.ui.actor.LoadingIcon;
 import com.andedit.viewmc.ui.actor.ProgressBar;
 import com.andedit.viewmc.ui.util.BaseUI;
 import com.andedit.viewmc.util.LoaderTask;
@@ -23,9 +23,11 @@ import com.andedit.viewmc.world.World;
 import com.andedit.viewmc.world.WorldLoader;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.utils.Align;
+import com.badlogic.gdx.utils.Null;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
 public class LoadingUI<T> extends BaseUI {
@@ -38,6 +40,7 @@ public class LoadingUI<T> extends BaseUI {
 	
 	private final Label status = new Label(null, Assets.skin);
 	private final ProgressBar bar = new ProgressBar();
+	private @Null Actor actor;
 	
 	private float time, lastProgress;
 	
@@ -47,7 +50,11 @@ public class LoadingUI<T> extends BaseUI {
 				var resources = future.get();
 				main.setResources(resources);
 			} catch (Exception e) {
-				e.getCause().printStackTrace();
+				if (e.getCause() != null) {
+					e.getCause().printStackTrace();
+				} else {
+					e.printStackTrace();
+				}
 				core.manager.setUI(new ResourcesUI(core), true);
 				return;
 			}
@@ -64,6 +71,8 @@ public class LoadingUI<T> extends BaseUI {
 			} catch (Exception e) {
 				if (e.getCause() != null) {
 					e.getCause().printStackTrace();
+				} else {
+					e.printStackTrace();
 				}
 			}
 			core.manager.setUI(new DropWorldUI(core), true);
@@ -79,19 +88,29 @@ public class LoadingUI<T> extends BaseUI {
 		this.future = future;
 		this.consumer = consumer;
 		
+		if (task instanceof ResourceLoader) {
+			//add(actor = new Marching(main.packer));
+			//actor.setUserObject(Vector2.Zero);
+		}
+		
 		var group = add(new Group());
 		group.setUserObject(new Vector2(0.5f, 0.5f));
 		
-		bar.setPosition(0, -10, Align.center);
+		bar.setPosition(0, -20, Align.center);
 		group.addActor(bar);
 		
 		status.setAlignment(Align.center);
-		status.setPosition(0, 10, Align.center);
+		status.setPosition(0, 5, Align.center);
 		group.addActor(status);
+		
+		var icon = new LoadingIcon();
+		icon.setPosition(0, 25, Align.bottom);
+		group.addActor(icon);
 	}
 	
 	@Override
 	public void update() {
+		
 		if (future.isDone()) {
 			consumer.accept(future);
 		}
@@ -113,6 +132,11 @@ public class LoadingUI<T> extends BaseUI {
 	
 	@Override
 	public void resize(Viewport view) {
+		bar.setWidth(Math.min(bar.getPrefWidth(), view.getWorldWidth()-20));
+		bar.setPosition(0, -20, Align.center);
 		
+		if (actor != null) {
+			actor.setSize(view.getWorldWidth(), view.getWorldHeight());
+		}
 	}
 }

@@ -23,7 +23,7 @@ public class Lwjgl3Launcher {
 		var config = new Lwjgl3ApplicationConfiguration();
 		config.setTitle("ViewMC");
 		config.setOpenGLEmulation(GLEmulation.GL30, 3, 2);
-		config.enableGLDebugOutput(true, System.err);
+		//config.enableGLDebugOutput(true, System.err);
 		config.disableAudio(true);
 		
 		config.setWindowListener(((DesktopAPI)Main.api).window);

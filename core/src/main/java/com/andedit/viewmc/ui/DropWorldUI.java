@@ -20,7 +20,7 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 
 public class DropWorldUI extends BaseUI {
 	
-	private static final Logger LOGGER = new Logger("DropWorldUI", Logger.INFO);
+	private static final Logger LOGGER = new Logger("DropWorldUI");
 	
 	private final MenuCore core;
 	private final Table root = new Table();

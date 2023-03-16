@@ -20,12 +20,12 @@ public class BlockStateJson {
 	public BlockStateJson(JsonValue value, OrderedSet<Identifier> modelsSet) {
 		value = value.child;
 		var name = value.name;
-		if (name.equalsIgnoreCase("variants")) {
+		if (name.equals("variants")) {
 			variants = new ArrayList<>(value.size);
 			for (var obj : value) {
 				variants.add(new VariantJson(obj, models));
 			}
-		} else if (name.equalsIgnoreCase("multipart")) {
+		} else if (name.equals("multipart")) {
 			cases = new ArrayList<>(value.size);
 			for (var obj : value) {
 				cases.add(new CaseJson(obj, models));

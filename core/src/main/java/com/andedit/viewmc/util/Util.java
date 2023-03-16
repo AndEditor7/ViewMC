@@ -174,7 +174,7 @@ public final class Util {
 	
 	public static Format vaildFormat(Format format) {
 		return switch (format) {
-		case Alpha -> Format.RGBA8888;
+		case Alpha, LuminanceAlpha, Intensity -> Format.RGBA8888;
 		default -> format;
 		};
 	}

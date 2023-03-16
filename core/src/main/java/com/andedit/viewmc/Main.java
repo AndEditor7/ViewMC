@@ -1,7 +1,10 @@
 package com.andedit.viewmc;
 
+import static com.badlogic.gdx.Gdx.app;
 import static com.badlogic.gdx.Gdx.gl;
 import static com.badlogic.gdx.Gdx.input;
+
+import java.lang.management.ManagementFactory;
 
 import com.andedit.viewmc.graphic.MeshVert;
 import com.andedit.viewmc.graphic.QuadIndex;
@@ -11,6 +14,7 @@ import com.andedit.viewmc.input.InputHolder;
 import com.andedit.viewmc.resource.ResourcePacker;
 import com.andedit.viewmc.resource.Resources;
 import com.andedit.viewmc.util.API;
+import com.andedit.viewmc.util.Logger;
 import com.andedit.viewmc.util.Util;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.InputMultiplexer;
@@ -42,6 +46,8 @@ public class Main extends ApplicationAdapter {
 	
 	@Override
 	public void create() {
+		app.setLogLevel(ManagementFactory.getRuntimeMXBean().getInputArguments().toString().contains("-agentlib:jdwp")?Logger.DEBUG:Logger.INFO);
+		
 		QuadIndex.init();
 		MeshVert.preInit();
 		stage = new StageUI(new ScreenViewport());

@@ -2,6 +2,7 @@ package com.andedit.viewmc.resource;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 
 import com.badlogic.gdx.files.FileHandle;
@@ -37,6 +38,7 @@ public class ResourcePacker implements Disposable {
 		for (var res : selectedRes) {
 			lastSelectedRes.add(new PackSection(res));
 		}
+		
 		for (var res : modRes) {
 			lastModRes.add(new ModSection(res));
 		}
@@ -63,13 +65,17 @@ public class ResourcePacker implements Disposable {
 		isStarted = false;
 	}
 	
-	/** create a new resource loader. */
-	public ResourceLoader getResourceLoader() {
+	public List<ResourceData> compile() {
 		var list = new ArrayList<ResourceData>();
 		list.add(corePack.data);
 		modRes.stream().filter(ModSection::filter).forEachOrdered(r->list.add(r.data));;
-		selectedRes.forEach(r->list.add(r.data));;
-		return new ResourceLoader(list);
+		selectedRes.forEach(r->list.add(r.data));
+		return list;
+	}
+	
+	/** create a new resource loader. */
+	public ResourceLoader getResourceLoader() {
+		return new ResourceLoader(compile());
 	}
 	
 	public void move(PackSection section) {
@@ -141,7 +147,9 @@ public class ResourcePacker implements Disposable {
 			isPackDirty = true;
 		}
 		if (name.endsWith(".jar")) {
-			modRes.add(new ModSection(new Mod(file)));
+			var mod = new ModSection(new Mod(file));
+			modRes.add(mod);
+			lastModRes.add(mod);
 			isModDirty = true;
 		}
 	}

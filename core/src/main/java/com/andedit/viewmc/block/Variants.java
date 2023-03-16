@@ -77,8 +77,12 @@ public class Variants implements Renderable {
 		Variant(VariantJson variant, ModelSupplier supplier) {
 			var strings = Util.split(variant.variant, ',');
 			for (var string : strings) {
-				if (!string.isEmpty()) 
-				cases.add(new Case(string));
+				if (!string.isEmpty()) {
+					var array = Util.split(string, '=');
+					if (array.size() == 2) {
+						cases.add(new Case(array));
+					}
+				}
 			}
 			for (var model : variant.models) {
 				models.add(model.weight, supplier.config(model.model, supplier.get(model.model).create(model)));
@@ -117,15 +121,14 @@ public class Variants implements Renderable {
 			
 			final String key, value;
 			
-			public Case(String string) {
-				var array = Util.split(string, '=');
+			public Case(List<String> array) {
 				key = array.get(0);
 				value = array.get(1);
 			}
 			
 			@Override
 			public boolean test(BlockState state) {
-				return state.get(key).equals(value);
+				return value.equals(state.get(key));
 			}
 		}
 	}

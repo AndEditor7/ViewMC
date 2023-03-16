@@ -8,6 +8,7 @@ import com.andedit.viewmc.graphic.TexBinder;
 import com.andedit.viewmc.graphic.TextureBlend;
 import com.andedit.viewmc.resource.RawResources;
 import com.andedit.viewmc.resource.texture.TextureJson;
+import com.andedit.viewmc.resource.texture.TextureJson.Frame;
 import com.andedit.viewmc.util.Identifier;
 import com.andedit.viewmc.util.Pair;
 import com.andedit.viewmc.util.Progress;
@@ -18,8 +19,11 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
+import com.badlogic.gdx.utils.IntArray;
 import com.badlogic.gdx.utils.Null;
 import com.badlogic.gdx.utils.ObjectMap;
+import com.badlogic.gdx.utils.ObjectSet;
+import com.badlogic.gdx.utils.OrderedSet;
 
 /**
  * The Block Texture Atlas. It contains all block textures in the texture sheet
@@ -35,8 +39,10 @@ public class TextureAtlas implements Disposable {
 
 	private final Pixmap atlas;
 	private final Array<Animated> animated;
+	private final ObjectMap<Identifier, Animated> animatedMap;
 	private final ObjectMap<Identifier, Sprite> spriteMap;
 	
+	private final ObjectSet<Identifier> missingSet = new ObjectSet<>();
 	private final Sprite missing;
 	private TexBinder binder;
 	
@@ -45,7 +51,7 @@ public class TextureAtlas implements Disposable {
 	private float time = 0;
 	private int tick = 0;
 	
-	public TextureAtlas(RawResources assets, Progress progress) {
+	public TextureAtlas(RawResources assets, Progress progress) throws Exception {
 		// Load every textures into the pixmap array.
 		
 		progress.setStatus("Loading Textures");
@@ -53,9 +59,14 @@ public class TextureAtlas implements Disposable {
 		animated = new Array<>(assets.blockTextureMetas.size);
 		var pixList = new Array<Pair<Identifier, Pixmap>>(assets.blockTextures.size);
 		for (var entry : assets.blockTextures) {
-			var pixmap = new Pixmap(entry.value, 0, entry.value.length);
-			pixList.add(new Pair<>(entry.key, pixmap));
 			progress.incStep();
+			try {
+				var pixmap = new Pixmap(entry.value, 0, entry.value.length);
+				pixList.add(new Pair<>(entry.key, pixmap));
+			} catch (Exception e) {
+				LOGGER.info("Failed to load texture " + entry.key, e);
+				missingSet.add(entry.key);
+			}
 		}
 
 		// Predict the dimension size of the texture atlas and create the pixmap.
@@ -65,17 +76,26 @@ public class TextureAtlas implements Disposable {
 			totalSize += pixmap.getWidth() * pixmap.getHeight();
 		}
 		
-		totalSize = (int)(totalSize / 0.8f);
+		totalSize = (int)(totalSize / 0.9f);
 		int size = MathUtils.nextPowerOfTwo((int) Math.sqrt(totalSize));
 		int width = size;
 		int height = size;
 		if (width * (height >> 1) > totalSize) {
 			height >>= 1;
 		}
-		var pair = new TextureMaker(width, height).build(assets, pixList, animated, this, progress);
-		atlas = pair.left;
-		spriteMap = pair.right;
-		missing = spriteMap.get(new Identifier("missing"));
+		
+		try {
+			var pair = new TextureMaker(width, height).build(assets, pixList, animated, this, progress);
+			atlas = pair.left;
+			spriteMap = pair.right;
+			missing = spriteMap.get(new Identifier("missing"));
+			animatedMap = new ObjectMap<>(animated.size);
+			animated.forEach(a->animatedMap.put(a.id, a));
+		} catch (Exception e) {
+			pixList.forEach(p -> p.right.dispose());
+			animated.forEach(Animated::dispose);
+			throw e;
+		}
 	}
 
 	public void createTexture() {
@@ -97,15 +117,15 @@ public class TextureAtlas implements Disposable {
 	}
 
 	/** Only update if the texture is binded. */
-	public void update() {
-		
-		
+	public void update(OrderedSet<Identifier> textureToAnimate) {
 		time += Gdx.graphics.getDeltaTime();
 		if (time > TICK) {
-			tick++;
+			if (++tick < 0) tick = 0;
 			time -= TICK;
-			animated.forEach(a -> a.tick(tick));
 			animated.forEach(a -> a.update(tick));
+			for (var id : textureToAnimate) {
+				animatedMap.get(id).draw(tick);
+			}
 		}
 	}
 	
@@ -113,9 +133,15 @@ public class TextureAtlas implements Disposable {
 		var sprite = spriteMap.get(id);
 		if (sprite == null) {
 			sprite = missing;
-			LOGGER.info("Missing texture: " + id);
+			if (missingSet.add(id)) {
+				LOGGER.info("Missing texture: " + id);
+			}
 		}
 		return spriteMap.get(id, sprite);
+	}
+	
+	public boolean isAnimated(Identifier id) {
+		return animatedMap.containsKey(id);
 	}
 
 	@Override
@@ -131,29 +157,36 @@ public class TextureAtlas implements Disposable {
 	public static class Sprite {
 		public final TextureBlend blend;
 		public final TexReg region;
+		public final Identifier id;
+		public final boolean isAnimated;
 		
-		Sprite(TextureBlend blend, TexReg region) {
+		Sprite(TextureBlend blend, TexReg region, Identifier id, boolean isAnimated) {
 			this.blend = blend;
 			this.region = region;
+			this.id = id;
+			this.isAnimated = isAnimated;
 		}
 	}
 
 	class Animated implements Disposable {
 		final Pixmap pixmap; // texture
+		final Identifier id;
 		final int width, height;
 		final int length; // frames
 		final int frametime;
 		final boolean interpolate;
-		final @Null int frames[];
+		final Frame[] frames;
 		final int x, y;
 		
+		private int currentTick;
 		private int index;
 		boolean update = true;
 
 		private final Pixmap pixTemp;
 		
-		Animated(Pixmap pixmap, int x, int y, TextureJson json) {
+		Animated(Pixmap pixmap, int x, int y, TextureJson json, Identifier id) {
 			this.pixmap = pixmap;
+			this.id = id;
 			this.frametime = json.frametime;
 			this.interpolate = json.interpolate;
 			this.x = x;
@@ -163,58 +196,64 @@ public class TextureAtlas implements Disposable {
 
 			this.width = json.width(pixmap);
 			this.height = json.height(pixmap);
-			this.length = this.frames == null ? pixmap.getHeight() / height : this.frames.length;
+			
+			this.length = frames.length == 0 ? pixmap.getHeight() / height : frames.length;
 			pixTemp = new Pixmap(width, height, pixmap.getFormat());
 			pixTemp.setBlending(Pixmap.Blending.None);
 		}
 		
-		void tick(int tick) {
-			if ((tick % frametime) == 0) {
+		void update(int tick) {
+			var t = tick - currentTick;
+			if (t < 0 || t >= getFrametime()) {
 				index++;
 				index %= length;
 				update = true;
+				currentTick = tick;
 			}
 		}
 		
-		void update(int tick) {
+		void draw(int tick) {
 			if (!update) return;
-			//update = interpolate; // interpolate
+			update = interpolate; // interpolate
 			
-			pixTemp.drawPixmap(pixmap, 0, 0, 0, (getIndex()) * height, width, height);
+			pixTemp.drawPixmap(pixmap, 0, 0, 0, getIndex() * height, width, height);
 			
-			if (false) {
-				var tempPixels = pixTemp.getPixels();
-				var mainPixels = pixmap.getPixels();
-				var offset = tempPixels.limit() * getNextIndex();
-				var progress = (tick % frametime) / (float)frametime;
-				if (tempPixels.limit() != mainPixels.limit()) {
-					for (int i = 0; i < tempPixels.limit(); i++) {
-						var c = MathUtils.lerp(tempPixels.get(i) & 0xFF, mainPixels.get(i+offset) & 0xFF, progress);
-						tempPixels.put(i, (byte)c);
-					}
+			if (interpolate) {
+				var frametime = getFrametime();
+				var progress = ((tick - currentTick) % frametime) / (float)frametime;
+				for (int x = 0; x < width; x++)
+				for (int y = 0; y < height; y++) {
+					int p = pixmap.getPixel(x, y + (getNextIndex() * height));
+					int t = pixTemp.getPixel(x, y);
+					
+					int r = ((int)MathUtils.lerp((t & 0xff000000) >>> 24, (p & 0xff000000) >>> 24, progress)) << 24;
+					int g = ((int)MathUtils.lerp((t & 0x00ff0000) >>> 16, (p & 0x00ff0000) >>> 16, progress)) << 16;
+					int b = ((int)MathUtils.lerp((t & 0x0000ff00) >>> 8, (p & 0x0000ff00) >>> 8, progress)) << 8;
+					int a = (int)MathUtils.lerp((t & 0x000000ff), (p & 0x000000ff), progress);
+					
+					pixTemp.drawPixel(x, y, r | g | b | a);
 				}
-				
 			}
 			
 			gl.glTexSubImage2D(texture.glTarget, 0, x * TEXTURE_SIZE, y * TEXTURE_SIZE, pixTemp.getWidth(), pixTemp.getHeight(), pixTemp.getGLFormat(), pixTemp.getGLType(), pixTemp.getPixels());
 		}
 		
+		private int getFrametime() {
+			return frames.length == 0 ? frametime : frames[getNextIndex()].getFrametime(frametime);
+		}
+		
 		private int getIndex() {
-			return hasFrames() ? frames[index] : index;
+			return frames.length == 0 ? index : frames[index].index;
 		}
 		
 		private int getNextIndex() {
 			int idx = (index+1) % length;
-			return hasFrames() ? frames[idx] : idx;
+			return frames.length == 0 ? idx : frames[idx].index;
 		}
 		
-		private boolean hasFrames() {
-			return frames != null;
-		}
-
 		@Override
 		public void dispose() {
-			pixmap.dispose();
+			if (!pixmap.isDisposed()) pixmap.dispose();
 			pixTemp.dispose();
 		}
 	}

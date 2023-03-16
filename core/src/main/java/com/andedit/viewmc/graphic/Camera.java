@@ -30,7 +30,7 @@ public final class Camera extends PerspectiveCamera
 	private static final Quaternion quat = new Quaternion();
 	
 	{
-		far = 500;
+		far = 1000;
 		near = 0.2f;
 		fieldOfView = 70;
 		setView(Util.getW(), Util.getH());

@@ -9,6 +9,7 @@ import com.andedit.viewmc.resource.blockstate.BlockStateJson;
 import com.andedit.viewmc.resource.texture.TextureJson;
 import com.andedit.viewmc.util.BufferedInputStream;
 import com.andedit.viewmc.util.ByteArrayOutput;
+import com.andedit.viewmc.util.FixedJsonReader;
 import com.andedit.viewmc.util.Identifier;
 import com.andedit.viewmc.util.IncompatibleException;
 import com.andedit.viewmc.util.LoaderTask;
@@ -21,7 +22,7 @@ import com.badlogic.gdx.utils.StreamUtils;
 
 public class ResourceLoader implements LoaderTask<Resources> {
 	
-	public static final Logger LOGGER = new Logger("ResourceLoader", Logger.INFO);
+	public static final Logger LOGGER = new Logger("ResourceLoader");
 	
 	private final ResourceData[] datas;
 	private final Progress progress = new Progress();
@@ -58,7 +59,7 @@ public class ResourceLoader implements LoaderTask<Resources> {
 
 		var buffer = new byte[8192];
 		var bytes = new ByteArrayOutput();
-		var reader = new JsonReader();
+		var reader = new FixedJsonReader();
 		var assets = new RawResources();
 		
 		var loader = new ZipLoader();
@@ -91,7 +92,7 @@ public class ResourceLoader implements LoaderTask<Resources> {
 					var value = reader.parse(stream);
 					assets.blockStates.put(entry.key, new BlockStateJson(value, modelIds));
 				} catch (Exception e) {
-					LOGGER.info("Error from loading the blockstate: " + entry.key);
+					LOGGER.info("Failed to load blockstate " + entry.key, e);
 				}
 			}
 
@@ -110,7 +111,7 @@ public class ResourceLoader implements LoaderTask<Resources> {
 					try (var stream = new BufferedInputStream(loader.getInputStream(entry), buffer)) {
 						assets.blockModels.put(id, new BlockModelJson(reader.parse(stream), textureIds, modelParents));
 					} catch (Exception e) {
-						LOGGER.info("Error from loading the block model: " + id);
+						LOGGER.info("Failed to load model " + id, e);
 					}
 				}
 			}
@@ -128,7 +129,7 @@ public class ResourceLoader implements LoaderTask<Resources> {
 					try (var stream = new BufferedInputStream(loader.getInputStream(entry), buffer)) {
 						json = new BlockModelJson(reader.parse(stream), textureIds, modelParents);
 					} catch (Exception e) {
-						LOGGER.info("Error from loading the block model: " + id);
+						LOGGER.info("Failed to load model " + id, e);
 					}
 				}
 
@@ -146,7 +147,7 @@ public class ResourceLoader implements LoaderTask<Resources> {
 							var json = new BlockModelJson(reader.parse(stream), textureIds, newModelParents);
 							assets.blockModels.put(id, json);
 						} catch (Exception e) {
-							LOGGER.info("Error from loading the block model parent: " + id);
+							LOGGER.info("Failed to load model parent " + id, e);
 						}
 					}
 				}
@@ -167,7 +168,7 @@ public class ResourceLoader implements LoaderTask<Resources> {
 						StreamUtils.copyStream(stream, bytes, buffer);
 						assets.blockTextures.put(id, bytes.toArray());
 					}  catch (Exception e) {
-						LOGGER.info("Error from reading the texture: " + id);
+						LOGGER.info("Failed to load texture " + id, e);
 					}
 				}
 			}
@@ -184,7 +185,7 @@ public class ResourceLoader implements LoaderTask<Resources> {
 				try (var stream = loader.getInputStream(entry)) {
 					StreamUtils.copyStream(stream, bytes, buffer);
 				} catch (Exception e) {
-					LOGGER.info("Error from reading the texture: " + id);
+					LOGGER.info("Failed to load texture " + id, e);
 					continue;
 				}
 				assets.blockTextures.put(id, bytes.toArray());
@@ -202,7 +203,7 @@ public class ResourceLoader implements LoaderTask<Resources> {
 					if (e instanceof IncompatibleException) {
 						continue;
 					}
-					LOGGER.info("Error from reading the texture meta: " + id);
+					LOGGER.info("Failed to load texture meta " + id, e);
 					continue;
 				}
 			}

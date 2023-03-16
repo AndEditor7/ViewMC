@@ -9,41 +9,40 @@ public class Logger {
 	public static final int INFO = 2;
 	public static final int DEBUG = 3;
 	
-	private static final int FORCE_LEVEL = NONE;
-	
 	public final String tag;
-	public final int level;
 	
-	public Logger(Class<?> type, int level) {
-		this(type.getSimpleName(), level);
+	public Logger(Class<?> type) {
+		this(type.getSimpleName());
 	}
 	
-	public Logger(String tag, int level) {
+	public Logger(String tag) {
 		this.tag = tag;
-		this.level = level;
 	}
 	
 	public void debug(Object message) {
-		if (Math.max(level, FORCE_LEVEL) >= DEBUG) app.debug(tag, String.valueOf(message));
+		app.debug(tag, String.valueOf(message));
 	}
 
-	public void debug(Object message, Exception exception) {
-		if (Math.max(level, FORCE_LEVEL) >= DEBUG) app.debug(tag, String.valueOf(message), exception);
+	public void debug(Object message, Throwable throwable) {
+		app.debug(tag, String.valueOf(message), throwable);
 	}
 
 	public void info(Object message) {
-		if (Math.max(level, FORCE_LEVEL) >= INFO) app.log(tag, String.valueOf(message));
+		app.log(tag, String.valueOf(message));
 	}
 
-	public void info(Object message, Exception exception) {
-		if (Math.max(level, FORCE_LEVEL) >= INFO) app.log(tag, String.valueOf(message), exception);
+	public void info(Object message, Throwable throwable) {
+		var string = String.valueOf(message);
+		if (app.getLogLevel() >= DEBUG) {
+			app.error(tag, string, throwable);
+		} else app.log(tag, string);
 	}
 
 	public void error(Object message) {
-		if (Math.max(level, FORCE_LEVEL) >= ERROR) app.error(tag, String.valueOf(message));
+		app.error(tag, String.valueOf(message));
 	}
 
 	public void error(Object message, Throwable exception) {
-		if (Math.max(level, FORCE_LEVEL) >= ERROR) app.error(tag, String.valueOf(message), exception);
+		app.error(tag, String.valueOf(message), exception);
 	}
 }

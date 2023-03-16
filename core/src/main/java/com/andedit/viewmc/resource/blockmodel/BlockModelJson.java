@@ -64,6 +64,8 @@ public class BlockModelJson {
 
 	public void load(ObjectMap<Identifier, BlockModelJson> models) {
 		if (isLoaded || parent == null) return;
+		isLoaded = true;
+		
 		var model = models.get(parent);
 		model.load(models);
 		
@@ -82,8 +84,6 @@ public class BlockModelJson {
 			map.putAll(textureMap);
 			textureMap = map;
 		}
-		
-		isLoaded = true;
 	}
 	
 	public void addAll(ObjectMap<Identifier, byte[]> srcTextures, ObjectMap<Identifier, byte[]> destTextures) {

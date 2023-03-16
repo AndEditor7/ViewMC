@@ -1,24 +1,26 @@
-package com.andedit.viewmc.world;
+package com.andedit.viewmc.graphic;
 
 import static com.badlogic.gdx.Gdx.gl;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
 
-import com.andedit.viewmc.graphic.Camera;
-import com.andedit.viewmc.graphic.MeshProvider;
-import com.andedit.viewmc.graphic.MeshVert;
-import com.andedit.viewmc.graphic.RenderLayer;
 import com.andedit.viewmc.graphic.vertex.Vertex;
+import com.andedit.viewmc.util.Identifier;
 import com.andedit.viewmc.util.Util;
-import com.andedit.viewmc.util.Vector3d;
+import com.andedit.viewmc.world.MeshToLoad;
+import com.andedit.viewmc.world.Section;
+import com.andedit.viewmc.world.WorldRenderer;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.GridPoint3;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
+import com.badlogic.gdx.utils.ObjectSet;
 
 public class Mesh implements Disposable {
-	private final EnumMap<RenderLayer, ArrayList<Vertex>> verts;
+	final EnumMap<RenderLayer, ArrayList<Vertex>> verts;
+	final EnumMap<RenderLayer, Array<Identifier>> textureToAnimate;
 	private final WorldRenderer render;
 	private final Section section;
 	private final int x, y, z;
@@ -36,14 +38,16 @@ public class Mesh implements Disposable {
 		this.z = z;
 		
 		verts = new EnumMap<>(RenderLayer.class);
+		textureToAnimate = new EnumMap<>(RenderLayer.class);
 		for (var layer : RenderLayer.VALUES) {
 			verts.put(layer, new ArrayList<>(2));
+			textureToAnimate.put(layer, new Array<>());
 		}
 	}
 	
 	public void update(MeshProvider provider) {
 		isEmpty = provider.isEmpty();
-		provider.build(verts);
+		provider.build(this);
 	}
 	
 	public boolean isVisible(Camera camera) {
@@ -58,6 +62,10 @@ public class Mesh implements Disposable {
 				vertex.unbind(shader);
 			}
 		}
+	}
+	
+	public void getTextures(RenderLayer layer, ObjectSet<Identifier> set) {
+		set.addAll(textureToAnimate.get(layer));
 	}
 	
 	public boolean isEmpty(RenderLayer layer) {

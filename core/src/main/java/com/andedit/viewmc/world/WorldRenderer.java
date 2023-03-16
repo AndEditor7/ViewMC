@@ -9,6 +9,7 @@ import java.util.concurrent.Future;
 import com.andedit.viewmc.Assets;
 import com.andedit.viewmc.Debugs;
 import com.andedit.viewmc.graphic.Camera;
+import com.andedit.viewmc.graphic.Mesh;
 import com.andedit.viewmc.graphic.MeshProvider;
 import com.andedit.viewmc.graphic.QuadIndex;
 import com.andedit.viewmc.graphic.RenderLayer;
@@ -17,6 +18,7 @@ import com.andedit.viewmc.graphic.TexBinder;
 import com.andedit.viewmc.graphic.renderer.Renderers;
 import com.andedit.viewmc.resource.Resources;
 import com.andedit.viewmc.util.FloodFill;
+import com.andedit.viewmc.util.Identifier;
 import com.andedit.viewmc.util.Pair;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.math.GridPoint3;
@@ -25,18 +27,21 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.Null;
 import com.badlogic.gdx.utils.ObjectSet;
+import com.badlogic.gdx.utils.OrderedSet;
 
 public class WorldRenderer implements Disposable {
 	
-	static final int RADIUS_H = 10;
-	static final float RADIUS_SCL = 0.7f;
-	static final int RADIUS_V = Math.min((int)(RADIUS_H*RADIUS_SCL), 12);
-	static final int BUILDERS = 20;
+	public static final int RADIUS_H = 16;
+	public static final float RADIUS_SCL = 0.7f;
+	public static final int RADIUS_V = Math.min((int)(RADIUS_H*RADIUS_SCL), 12);
+	public static final int BUILDERS = 20;
 	
 	static final int DELETE_MESH_OFFSET = 3;
 	
 	private final Array<Mesh> meshes = new Array<>(false, 500);
-	private final Array<Mesh> trans = new Array<>(false, 200);
+	private final Array<Mesh> transToRender = new Array<>(false, 500);
+	private final Array<Mesh> soildToRender = new Array<>(false, 500);
+	private final OrderedSet<Identifier> textureToAnimate = new OrderedSet<>(200);
 	private final GridPoint3 chunkPos = new GridPoint3();
 	private final Renderers renderers;
 	private final Resources resources;
@@ -76,7 +81,36 @@ public class WorldRenderer implements Disposable {
 		scanForMeshs(camera);
 		updateMeshes();
 		
+		transToRender.clear();
+		soildToRender.clear();
+		for (int i = 0; i < meshes.size; i++) {
+			var mesh = meshes.get(i);
+			
+			if (mesh.isEmpty() || mesh.pass(chunkPos, DELETE_MESH_OFFSET)) {
+				meshes.removeIndex(i--);
+				mesh.dispose();
+				continue;
+			}
+			
+			if (!mesh.pass(chunkPos, 0) && mesh.isVisible(camera)) {
+				soildToRender.add(mesh);
+				if (!mesh.isEmpty(RenderLayer.TRANS)) {
+					transToRender.add(mesh);
+				}
+			}
+		}
 
+		if (transToRender.notEmpty()) {
+			var gridA = new GridPoint3();
+			var gridB = new GridPoint3();
+			var gridPos = camPos.toGrid();;
+			transToRender.sort((a, b) -> {
+				a.getCenter(gridA);
+				b.getCenter(gridB);
+				return MathUtils.round(Math.signum(gridPos.dst2(gridB) - gridPos.dst2(gridA)));
+			});
+		}
+		
 		var renderer = renderers.getRenderer();
 		var shader = renderer.shader;
 		
@@ -89,9 +123,7 @@ public class WorldRenderer implements Disposable {
 		
 		float fogEnd = (RADIUS_H-1) * 16f;
 		resources.bindTexture();
-		resources.update();
 		QuadIndex.preBind();
-		
 		
 		shader.bind();
 		shader.setUniformMatrix("u_projTrans", camera.combined);
@@ -99,46 +131,31 @@ public class WorldRenderer implements Disposable {
 		shader.setUniformf("u_factPos", camPos.floatFactX(), camPos.floatFactZ());
 		shader.setUniformf("u_fogColor", SkyBox.FOG);
 		shader.setUniformf("u_fogStart", fogEnd);
-		shader.setUniformf("u_fogEnd", fogEnd * 0.85f);
+		shader.setUniformf("u_fogEnd", fogEnd * 0.9f);
 		shader.setUniformi("u_texture", resources.getTextureUnit());
 		shader.setUniformi("u_lightMap", Assets.lightMapBind.unit);
 		
-		trans.clear();
+		textureToAnimate.clear();
+		for (var mesh : soildToRender) {
+			mesh.getTextures(RenderLayer.SOILD, textureToAnimate);
+		}
+		for (var mesh : transToRender) {
+			mesh.getTextures(RenderLayer.TRANS, textureToAnimate);
+		}
+		resources.update(textureToAnimate);
+		
 		renderer.enable(RenderLayer.SOILD);
-		for (int i = 0; i < meshes.size; i++) {
-			var mesh = meshes.get(i);
-			
-			if (mesh.isEmpty() || mesh.pass(chunkPos, DELETE_MESH_OFFSET)) {
-				meshes.removeIndex(i--);
-				mesh.dispose();
-				continue;
-			}
-			
-			if (!mesh.pass(chunkPos, 0) && mesh.isVisible(camera)) {
-				mesh.render(shader, RenderLayer.SOILD);
-				if (!mesh.isEmpty(RenderLayer.TRANS)) {
-					trans.add(mesh);
-				}
-			}
+		for (int i = 0; i < soildToRender.size; i++) {
+			soildToRender.get(i).render(shader, RenderLayer.SOILD);
 		}
+		soildToRender.clear();
 		renderer.disable(RenderLayer.SOILD);
-
-		if (trans.notEmpty()) {
-			var gridA = new GridPoint3();
-			var gridB = new GridPoint3();
-			var gridPos = camPos.toGrid();;
-			trans.sort((a, b) -> {
-				a.getCenter(gridA);
-				b.getCenter(gridB);
-				return MathUtils.round(Math.signum(gridPos.dst2(gridB) - gridPos.dst2(gridA)));
-			});
-		}
 		
 		renderer.enable(RenderLayer.TRANS);
-		for (int i = 0; i < trans.size; i++) {
-			trans.get(i).render(shader, RenderLayer.TRANS);
+		for (int i = 0; i < transToRender.size; i++) {
+			transToRender.get(i).render(shader, RenderLayer.TRANS);
 		}
-		trans.clear();
+		transToRender.clear();
 		renderer.disable(RenderLayer.TRANS);
 		
 		gl.glDisable(GL20.GL_CULL_FACE);

@@ -2,7 +2,6 @@ package com.andedit.viewmc.graphic;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
-import java.util.List;
 
 import com.andedit.viewmc.block.BlockModel.Quad;
 import com.andedit.viewmc.graphic.vertex.Vertex;
@@ -25,14 +24,22 @@ public class MeshProvider {
 		return builders.get(layer);
 	}
 	
-	public void build(EnumMap<RenderLayer, ? extends List<Vertex>> verts) {
-		for (var entry : verts.entrySet()) {
+	public void build(Mesh mesh) {
+		for (var entry : mesh.verts.entrySet()) {
 			var builder = builders.get(entry.getKey());
 			var it = entry.getValue().listIterator(builder.build(entry.getValue(), () -> Vertex.newVbo(MeshVert.attributes, GL20.GL_STATIC_DRAW)));
 	        while (it.hasNext()) {
 	            it.next().dispose();
 	            it.remove();
 	        }
+		}
+		
+		for (var entry : mesh.textureToAnimate.entrySet()) {
+			var builder = builders.get(entry.getKey());
+			var array = entry.getValue();
+			array.clear();
+			array.addAll(builder.textureToAnimate.orderedItems());
+			builder.textureToAnimate.clear();
 		}
 	}
 	

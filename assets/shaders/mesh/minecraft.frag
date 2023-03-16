@@ -3,7 +3,7 @@
 precision mediump float;
 #endif
 
-in vec3 position;
+in highp vec3 position;
 in float ambientLight;
 in float blockLight;
 in float skyLight;

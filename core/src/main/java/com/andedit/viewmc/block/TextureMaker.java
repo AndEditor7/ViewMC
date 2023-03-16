@@ -46,7 +46,7 @@ class TextureMaker {
 		atlas.setColor(Color.BLACK);
 		atlas.fillRectangle(0, 8, 8, 8);
 		atlas.fillRectangle(8, 0, 8, 8);
-		spriteMap.put(new Identifier("missing"), new Sprite(TextureBlend.SOILD, new TexReg(0, 0, TEXTURE_SIZE/(float)width, TEXTURE_SIZE/(float)height)));
+		spriteMap.put(new Identifier("missing"), new Sprite(TextureBlend.SOILD, new TexReg(0, 0, TEXTURE_SIZE/(float)width, TEXTURE_SIZE/(float)height), new Identifier("missing"), false));
 		isFilled[0][0] = true;
 		x++;
 		
@@ -62,26 +62,32 @@ class TextureMaker {
 			
 			int width, height;
 			var json = assets.blockTextureMetas.get(id);
-			if (json != null) { // if it's an animated texture.
-				width = height = pixmap.getWidth() / TEXTURE_SIZE;
+			boolean isAnimated = json != null;
+			if (isAnimated) { // if it's an animated texture.
+				width = json.width(pixmap);
+				height = json.height(pixmap);
+				isAnimated = width != pixmap.getWidth() || height != pixmap.getHeight();
+				if (!isAnimated) {
+					pixDispose.add(pixmap);
+				}
 			} else {
-				width = pixmap.getWidth() / TEXTURE_SIZE;
-				height = pixmap.getHeight() / TEXTURE_SIZE;
+				width = pixmap.getWidth();
+				height = pixmap.getHeight();
 				pixDispose.add(pixmap);
 			}
-			width = Math.max(width, 1);
-			height = Math.max(height, 1);
+			width = Math.max(width / TEXTURE_SIZE, 1);
+			height = Math.max(height / TEXTURE_SIZE, 1);
 			
 			int x0 = x, y0 = y;
 			
 			while (true) {
 				if (isValidSpot(x0, y0, width, height)) {
-					if (json != null) { // if it's an animated texture.
-						spriteMap.put(id, newSprite(pixmap, pixmap.getWidth(), x0, y0));
-						var animated = textures.new Animated(pixmap, x0, y0, json);
+					if (isAnimated) { // if it's an animated texture.
+						spriteMap.put(id, newSprite(id, pixmap, isAnimated, json.width(pixmap), json.height(pixmap), x0, y0));
+						var animated = textures.new Animated(pixmap, x0, y0, json, id);
 						animatedList.add(animated);
 					} else {
-						spriteMap.put(id, newSprite(pixmap, pixmap.getHeight(), x0, y0));
+						spriteMap.put(id, newSprite(id, pixmap, false, pixmap.getWidth(), pixmap.getHeight(), x0, y0));
 						atlas.drawPixmap(pixmap, x0 * TEXTURE_SIZE, y0 * TEXTURE_SIZE);
 					}
 					
@@ -132,7 +138,7 @@ class TextureMaker {
 	}
 	
 	/** Create a new Texture Region. The parameters are just index like a tile position. */
-	private Sprite newSprite(Pixmap pixmap, int height, int x, int y) {
+	private Sprite newSprite(Identifier id, Pixmap pixmap, boolean isAnimated, int width, int height, int x, int y) {
 		var blend = TextureBlend.SOILD;
 		
 		for (int u = 0; u < pixmap.getWidth(); u++)
@@ -148,15 +154,15 @@ class TextureMaker {
 			}
 		}
 		
-		return newSprite(pixmap, blend, height, x, y);
+		return newSprite(id, pixmap, blend, isAnimated, width, height, x, y);
 	}
 	
 	/** Create a new Texture Region. The parameters are just index like a tile position. */
-	private Sprite newSprite(Pixmap pixmap, TextureBlend blend, int height, int x, int y) {
+	private Sprite newSprite(Identifier id, Pixmap pixmap, TextureBlend blend, boolean isAnimated, int width, int height, int x, int y) {
 		x *= TEXTURE_SIZE;
 		y *= TEXTURE_SIZE;
-		final float w = width;
+		final float w = this.width;
 		final float h = this.height;
-		return new Sprite(blend, new TexReg(x/w, y/h, (x+pixmap.getWidth())/w, (y+height)/h));
+		return new Sprite(blend, new TexReg(x/w, y/h, (x+width)/w, (y+height)/h), id, isAnimated);
 	}
 }

@@ -8,7 +8,6 @@ import java.util.List;
 import com.andedit.viewmc.block.BlockModel.Quad;
 import com.andedit.viewmc.block.TextureAtlas.Sprite;
 import com.andedit.viewmc.graphic.Lighting;
-import com.andedit.viewmc.graphic.MeshBuilder;
 import com.andedit.viewmc.graphic.MeshProvider;
 import com.andedit.viewmc.graphic.RenderLayer;
 import com.andedit.viewmc.graphic.TextureBlend;
@@ -20,6 +19,7 @@ import com.andedit.viewmc.resource.blockstate.ModelJson;
 import com.andedit.viewmc.util.Cull;
 import com.andedit.viewmc.util.Facing;
 import com.andedit.viewmc.util.Facing.Axis;
+import com.andedit.viewmc.util.Identifier;
 import com.andedit.viewmc.util.Pair;
 import com.andedit.viewmc.util.TexReg;
 import com.andedit.viewmc.util.Util;
@@ -239,7 +239,8 @@ public class BlockModel implements Iterable<Quad> {
 		public boolean isAlign = true;
 		public boolean allowRender = false; // Allows other quad to render.
 		public TextureBlend blend = TextureBlend.SOILD;
-		public TexReg region;
+		private TexReg region;
+		private @Null Identifier texAnimated;
 		
 		private @Null Facing face;
 		private RenderLayer layer = RenderLayer.SOILD;
@@ -263,6 +264,7 @@ public class BlockModel implements Iterable<Quad> {
 			culling = quad.culling;
 			isAlign = quad.isAlign;
 			region = quad.region;
+			texAnimated = quad.texAnimated;
 			borderCollide = quad.borderCollide;
 			allowRender = quad.allowRender;
 			layer = quad.layer;
@@ -277,8 +279,7 @@ public class BlockModel implements Iterable<Quad> {
 		private void init(Face value, BlockModelJson model, TextureAtlas textures) {
 			tintIndex = value.tintIndex;
 			culling = value.culling;
-			var sprite = textures.getSprite(model.getTexture(value.texture));
-			reg(sprite, value.uv);
+			reg(textures.getSprite(model.getTexture(value.texture)), value.uv);
 			rotateTex(value.rotation);
 		}
 
@@ -406,35 +407,8 @@ public class BlockModel implements Iterable<Quad> {
 				builder.vert(v3.x+xf, v3.y+yf, v3.z+zf, t3.x, t3.y);
 				builder.vert(v4.x+xf, v4.y+yf, v4.z+zf, t4.x, t4.y);
 			}
-		}
-		
-		private void calc(MeshBuilder builder, Section section, int x, int y, int z, int u, int v) {
-			Facing upFace = face.getUpFace();
-			Facing rightFace = face.getRightFace();
-			var aoGrid = builder.aoGrid;
-			var litGrid = builder.litGrid;
 			
-			// for sky/block lighting
-			int x0 = x + getOffset(Axis.X);
-			int y0 = y + getOffset(Axis.Y);
-			int z0 = z + getOffset(Axis.Z);
-			
-			// face forward offset
-			int x1 = x + face.offsetValue(Axis.X);
-			int y1 = y + face.offsetValue(Axis.Y);
-			int z1 = z + face.offsetValue(Axis.Z);
-			
-			int x2 = (rightFace.axis.getInt(Axis.X)*u) + (upFace.axis.getInt(Axis.X)*v);
-			int y2 = (rightFace.axis.getInt(Axis.Y)*u) + (upFace.axis.getInt(Axis.Y)*v);
-			int z2 = (rightFace.axis.getInt(Axis.Z)*u) + (upFace.axis.getInt(Axis.Z)*v);
-			litGrid.set(section.getLightAt(x0+x2, y0+y2, z0+z2), u, v);
-			
-			boolean bool = false;
-			int light = Lights.toBlock(!borderCollide ? section.getLightAt(x1+x2, y1+y2, z1+z2) : litGrid.get(u, v));
-			if (section.getBlockStateAt(x1+x2, y1+y2, z1+z2).isFullOpque(light, x1+x2, y1+y2, z1+z2)) {
-				bool = Lights.toBlock(light) == 0;
-			}
-			aoGrid.set(bool, u, v);
+			builder.addTexture(texAnimated);
 		}
 		
 		/** Get face offset value for lighting */
@@ -466,6 +440,7 @@ public class BlockModel implements Iterable<Quad> {
 			layer = sprite.blend.getRenderLayer();
 			allowRender = sprite.blend != TextureBlend.SOILD;
 			blend = sprite.blend;
+			texAnimated = sprite.isAnimated ? sprite.id : null;
 		}
 		
 		Quad reg(Sprite sprite, @Null UV uv) {

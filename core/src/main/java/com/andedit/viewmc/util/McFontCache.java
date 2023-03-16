@@ -34,7 +34,7 @@ public class McFontCache extends BitmapFontCache {
 		formats.clear();
 		for (int i = start; i < end; i++) {
 			var c = str.charAt(i);
-			if (c == '§') {
+			if (c == '\u00A7') {
 				if (i+2 >= end) break;
 				formats.add(new Format(i, Fonts.getColor(str.charAt(i+1))));
 			}

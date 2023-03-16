@@ -39,7 +39,63 @@ public class Mod implements ModData {
 		try (var zip = new ZipFile(file.file())) {
 			var bytes = new ByteArrayOutput();
 			ZipEntry entry = null;
-			if ((entry = zip.getEntry("fabric.mod.json")) != null) { // Fabric
+			if ((entry = zip.getEntry("quilt.mod.json")) != null) { // Quilt
+				type = ModType.QUILT;
+				var value = new JsonReader().parse(new BufferedInputStream(zip.getInputStream(entry), bytes.array()));
+				@Null var loader = value.get("quilt_loader");
+				@Null var meta = loader.get("metadata");
+				if (meta != null) {
+					title = Util.unescapeJavaString(meta.getString("name", loader == null ? file.nameWithoutExtension() : loader.getString("id", file.nameWithoutExtension())));
+					description = Util.unescapeJavaString(meta.getString("description", ""));
+					@Null var json = meta.get("contributors");
+					if (json != null) {
+						quiltContributors = new ArrayList<>();
+						for (var val : json) {
+							if (val.isArray()) {
+								quiltContributors.add(new Pair<String, List<String>>(val.name, List.of(val.asStringArray())));
+							} else {
+								quiltContributors.add(new Pair<String, List<String>>(val.name, List.of(val.asString())));
+							}
+						}
+					}
+					
+					json = meta.get("license");
+					if (json != null) 
+					if (json.isArray()) {
+						license = List.of(json.asStringArray());
+					} else if (json.isObject() && json.notEmpty()) {
+						license = List.of(json.getString("name"));
+					} else {
+						license = List.of(json.asString());
+					}
+					
+					json = meta.get("icon");
+					if (json != null) 
+					if (json.isObject() && json.notEmpty()) {
+						var array = new IntArray();
+						for (var val : json) {
+							array.add(Integer.parseInt(val.name));
+						}
+						array.sort();
+						int size = array.first();
+						for (int i = 0; i < array.size; i++) {
+							size = array.get(i);
+							if (size >= 64) {
+								break;
+							}
+						}
+						entry = zip.getEntry(json.getString(Integer.toString(size)));
+						image = ResourceData.loadTexture(zip, entry, bytes);
+					} else {
+						entry = zip.getEntry(json.asString());
+						image = ResourceData.loadTexture(zip, entry, bytes);
+					}
+				} else {
+					title = Util.unescapeJavaString(loader == null ? file.nameWithoutExtension() : loader.getString("id", file.nameWithoutExtension()));
+				}
+				
+				version = loader.getString("version", "");
+			} else if ((entry = zip.getEntry("fabric.mod.json")) != null) { // Fabric
 				type = ModType.FABIC;
 				var value = new JsonReader().parse(new BufferedInputStream(zip.getInputStream(entry), bytes.array()));
 				
@@ -132,57 +188,12 @@ public class Mod implements ModData {
 				
 				entry = zip.getEntry("pack.png");
 				image = ResourceData.loadTexture(zip, entry, bytes);
-			} else if ((entry = zip.getEntry("quilt.mod.json")) != null) { // Quilt
-				type = ModType.QUILT;
-				var value = new JsonReader().parse(new BufferedInputStream(zip.getInputStream(entry), bytes.array()));
-				@Null var loader = value.get("quilt_loader");
-				@Null var meta = value.get("metadata");
-				if (meta != null) {
-					title = Util.unescapeJavaString(value.getString("name", loader == null ? file.nameWithoutExtension() : loader.getString("id", file.nameWithoutExtension())));
-					description = Util.unescapeJavaString(meta.getString("description", ""));
-					@Null var json = meta.get("contributors");
-					if (json != null) 
-					if (json.isArray()) {
-						quiltContributors = List.of(new Pair<>(json.name, List.of(json.asStringArray())));
-					} else {
-						quiltContributors = List.of(new Pair<>(json.name, List.of(json.asString())));
-					}
-					json = meta.get("license");
-					if (json != null) 
-					if (json.isArray()) {
-						license = List.of(json.asStringArray());
-					} else if (json.isObject() && json.notEmpty()) {
-						license = List.of(json.getString("name"));
-					} else {
-						license = List.of(json.asString());
-					}
-					
-					json = meta.get("icon");
-					if (json != null) 
-					if (json.isObject() && json.notEmpty()) {
-						var array = new IntArray();
-						for (var val : json) {
-							array.add(Integer.parseInt(val.name));
-						}
-						array.sort();
-						int size = array.first();
-						for (int i = 0; i < array.size; i++) {
-							size = array.get(i);
-							if (size >= 64) {
-								break;
-							}
-						}
-						entry = zip.getEntry(json.getString(Integer.toString(size)));
-						image = ResourceData.loadTexture(zip, entry, bytes);
-					} else {
-						entry = zip.getEntry(json.asString());
-						image = ResourceData.loadTexture(zip, entry, bytes);
-					}
-				} else {
-					title = Util.unescapeJavaString(loader == null ? file.nameWithoutExtension() : loader.getString("id", file.nameWithoutExtension()));
-				}
 				
-				version = loader.getString("version", "");
+				if (image.isEmpty() && logo.isPresent()) {
+					if (logo.get().getWidth() == logo.get().getHeight()) {
+						image = logo;
+					}
+				}
 			}
 		}
 		

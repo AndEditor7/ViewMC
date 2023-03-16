@@ -30,8 +30,6 @@ import com.badlogic.gdx.utils.Scaling;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
 public class ModsUI extends BaseUI {
-
-	private static final StringBuilder builder = new StringBuilder();
 	
 	private final MenuCore core;
 	private final ResourcePacker packer;
@@ -187,9 +185,12 @@ public class ModsUI extends BaseUI {
 				text.append("[#ffffff]").append("Credits:\n");
 				for (var pair : data.getQuiltContributors()) {
 					text.append("[#aaaaaa]").append(pair.left).append(' ');
+					text.append('(');
 					for (var role : pair.right) {
-						text.append('(').append(role).append(") ");
+						text.append(role).append(", ");
 					}
+					text.setLength(Math.max(text.length()-2, 0));
+					text.append(")\n");
 				}
 			}
 		}
