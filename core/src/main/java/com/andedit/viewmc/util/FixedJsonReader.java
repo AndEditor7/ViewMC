@@ -2,6 +2,7 @@ package com.andedit.viewmc.util;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.util.Arrays;
 
 import com.badlogic.gdx.utils.JsonReader;
 import com.badlogic.gdx.utils.JsonValue;
@@ -19,20 +20,12 @@ public class FixedJsonReader extends JsonReader {
 				int length = reader.read(data, offset, data.length - offset);
 				if (length == -1) break;
 				if (length == 0) {
-					char[] newData = new char[data.length * 2];
-					System.arraycopy(data, 0, newData, 0, data.length);
-					data = newData;
-				} else
-					offset += length;
+					data = Arrays.copyOf(data, data.length << 1);
+				} else offset += length;
 			}
 		} catch (IOException ex) {
 			throw new SerializationException("Error reading input.", ex);
 		}
 		return parse(data, 0, offset);
-	}
-	
-	@Override
-	public JsonValue parse(char[] data, int offset, int length) {
-		return super.parse(data, offset, length);
 	}
 }

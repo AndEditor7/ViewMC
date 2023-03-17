@@ -2,22 +2,22 @@ package com.andedit.viewmc.resource.blockmodel;
 
 import com.andedit.viewmc.util.Facing.Axis;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.FloatArray;
 import com.badlogic.gdx.utils.JsonValue;
-import com.badlogic.gdx.utils.Null;
 
 public class Rotation {
 	
-	private static final Quaternion IDT = new Quaternion();
+	private static final Matrix4 IDT = new Matrix4();
 	
 	public final Vector3 origin;
-	public final @Null Axis axis;
+	public final Axis axis;
 	public final float angle;
 	public final boolean rescale;
 	
-	public final Quaternion quat;
+	public final Matrix4 matrix;
 	
 	public Rotation(JsonValue value) {
 		var array = new FloatArray(3);
@@ -28,6 +28,6 @@ public class Rotation {
 		angle = value.getFloat("angle", 0);
 		rescale = value.getBoolean("rescale", false);
 		
-		quat = MathUtils.isZero(angle) ? IDT : new Quaternion(axis.getVec(), angle);
+		matrix = MathUtils.isZero(angle) ? IDT : new Matrix4(new Quaternion(axis.getVec(), angle));
 	}
 }

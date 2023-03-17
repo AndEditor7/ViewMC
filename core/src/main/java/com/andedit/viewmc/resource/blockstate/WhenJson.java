@@ -20,6 +20,7 @@ public class WhenJson {
 		} else {
 			isOr = true;
 		}
+		
 		if (gate != null) {
 			states = new ArrayList<>(gate.size);
 			for (var obj : gate) {

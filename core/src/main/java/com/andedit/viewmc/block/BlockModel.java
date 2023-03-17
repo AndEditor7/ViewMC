@@ -5,6 +5,8 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.swing.Box;
+
 import com.andedit.viewmc.block.BlockModel.Quad;
 import com.andedit.viewmc.block.TextureAtlas.Sprite;
 import com.andedit.viewmc.graphic.Lighting;
@@ -48,7 +50,7 @@ public class BlockModel implements Iterable<Quad> {
 	/** ambient occlusion */
 	public boolean ao = true;
 	
-	private boolean isFullCube;
+	private boolean isFullOpaque;
 	
 	public BlockModel() {
 		
@@ -56,7 +58,7 @@ public class BlockModel implements Iterable<Quad> {
 	
 	private BlockModel(BlockModel oldModel, ModelJson model) {
 		ao = oldModel.ao;
-		isFullCube = oldModel.isFullCube;
+		isFullOpaque = oldModel.isFullOpaque;
 		
 		for (var pair : oldModel.boxes) {
 			var box = new BoundingBox(pair.left);
@@ -108,9 +110,17 @@ public class BlockModel implements Iterable<Quad> {
 						continue loop;
 					}
 				}
-				isFullCube = true;
+				isFullOpaque = true;
 			}
 		}
+	}
+	
+	public static BlockModel missingModel(Sprite sprite) {
+		var model = new BlockModel();
+		model.ao = false;
+		var cube = model.cube(0, 0, 0, 16, 16, 16);
+		cube.regAll(sprite);
+		return model;
 	}
 	
 	public BlockModel create(ModelJson model) {
@@ -140,7 +150,7 @@ public class BlockModel implements Iterable<Quad> {
 	}
 	
 	public boolean isFullOpaque() {
-		return isFullCube;
+		return isFullOpaque;
 	}
 	
 	/** a = from, b = to. 0 to 16 */
@@ -572,28 +582,40 @@ public class BlockModel implements Iterable<Quad> {
 			}
 		}
 		
-		private void rotate(Matrix4 mat, Vector3 origin, boolean rescale) {
+		private void rotate(Rotation rotation, Vector3 origin) {
 			//face = null;
 			culling = false;
 			borderCollide = false;
 			allowRender = true;
 			isAlign = false;
-			isFullCube = false;
-			rescale(v1.sub(origin).mul(mat).add(origin), rescale);
-			rescale(v2.sub(origin).mul(mat).add(origin), rescale);
-			rescale(v3.sub(origin).mul(mat).add(origin), rescale);
-			rescale(v4.sub(origin).mul(mat).add(origin), rescale);
+			isFullOpaque = false;
+			
+			if (rotation.rescale) {
+				var scale = 1f + 1f / (MathUtils.cosDeg(45f) - 1f);
+				var axis = rotation.axis;
+				rescale(v1, origin, axis, scale);
+				rescale(v2, origin, axis, scale);
+				rescale(v3, origin, axis, scale);
+				rescale(v4, origin, axis, scale);
+			}
+			
+			v1.sub(origin).mul(rotation.matrix).add(origin);
+			v2.sub(origin).mul(rotation.matrix).add(origin);
+			v3.sub(origin).mul(rotation.matrix).add(origin);
+			v4.sub(origin).mul(rotation.matrix).add(origin);
 		}
 		
-		private static void rescale(Vector3 v, boolean rescale) {
-			if (rescale)
-			v.set(MathUtils.round(v.x), MathUtils.round(v.y), MathUtils.round(v.z));
+		private void rescale(Vector3 vert, Vector3 origin, Axis axis, float scale) {
+			var vec = axis.getVec();
+			vert.x += scale * (vert.x - box.getCenterX()) * (1f - vec.x);
+			vert.z += scale * (vert.z - box.getCenterZ()) * (1f - vec.z);
+			// TODO implement the Y rescale
 		}
 		
 		private void rotate(ModelJson model) {
 			if (face != null)
 			face = face.rotate(model.x, model.y);
-			float a = 0.5f;
+			final float a = 0.5f;
 			v1.sub(a).mul(model.matrix).add(a);
 			v2.sub(a).mul(model.matrix).add(a);
 			v3.sub(a).mul(model.matrix).add(a);
@@ -664,8 +686,7 @@ public class BlockModel implements Iterable<Quad> {
 		private void rotate(@Null Rotation rotation) {
 			if (rotation == null || MathUtils.isZero(rotation.angle)) return;
 			var origin = rotation.origin.cpy().scl(1/16f);
-			var mat = new Matrix4(rotation.quat); // TODO: Try setting the matrix's origin.
-			forEach(q -> q.rotate(mat, origin, rotation.rescale));
+			forEach(q -> q.rotate(rotation, origin));
 		}
 
 		public void shade(boolean shade) {

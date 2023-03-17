@@ -85,15 +85,15 @@ public class TextureAtlas implements Disposable {
 		}
 		
 		try {
-			var pair = new TextureMaker(width, height).build(assets, pixList, animated, this, progress);
-			atlas = pair.left;
-			spriteMap = pair.right;
+			var maker = new TextureMaker(width, height);
+			atlas = maker.atlas;
+			spriteMap = maker.build(assets, pixList, animated, this, progress);
 			missing = spriteMap.get(new Identifier("missing"));
 			animatedMap = new ObjectMap<>(animated.size);
 			animated.forEach(a->animatedMap.put(a.id, a));
 		} catch (Exception e) {
 			pixList.forEach(p -> p.right.dispose());
-			animated.forEach(Animated::dispose);
+			dispose();
 			throw e;
 		}
 	}
@@ -102,6 +102,7 @@ public class TextureAtlas implements Disposable {
 		if (texture != null) throw new IllegalStateException("Texture is already created.");
 		texture = new Texture(atlas);
 		binder = new TexBinder();
+		atlas.dispose();
 	}
 	
 	public Texture getTexture() {
@@ -132,12 +133,16 @@ public class TextureAtlas implements Disposable {
 	public Sprite getSprite(Identifier id) {
 		var sprite = spriteMap.get(id);
 		if (sprite == null) {
-			sprite = missing;
+			sprite = getMissingSprite();
 			if (missingSet.add(id)) {
-				LOGGER.info("Missing texture: " + id);
+				LOGGER.info("Missing texture " + id);
 			}
 		}
-		return spriteMap.get(id, sprite);
+		return sprite;
+	}
+	
+	public Sprite getMissingSprite() {
+		return missing;
 	}
 	
 	public boolean isAnimated(Identifier id) {
@@ -146,7 +151,7 @@ public class TextureAtlas implements Disposable {
 
 	@Override
 	public void dispose() {
-		atlas.dispose();
+		if (atlas != null && !atlas.isDisposed()) atlas.dispose();
 		animated.forEach(Animated::dispose);
 		if (texture != null) {
 			texture.dispose();

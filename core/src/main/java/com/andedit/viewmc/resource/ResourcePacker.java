@@ -26,8 +26,6 @@ public class ResourcePacker implements Disposable {
 	public boolean isPackDirty, isModDirty, isStarted;
 	
 	public void start() {
-		if (isStarted) return;
-		
 		lastAvailableRes.clear();
 		lastSelectedRes.clear();
 		lastModRes.clear();
@@ -42,8 +40,6 @@ public class ResourcePacker implements Disposable {
 		for (var res : modRes) {
 			lastModRes.add(new ModSection(res));
 		}
-		
-		isStarted = true;
 	}
 	
 	public boolean hasChanged() {
@@ -51,8 +47,6 @@ public class ResourcePacker implements Disposable {
 	}
 	
 	public void cancel() {
-		if (!isStarted) return;
-			
 		availableRes.clear();
 		availableRes.addAll(lastAvailableRes);
 		selectedRes.clear();
@@ -62,7 +56,6 @@ public class ResourcePacker implements Disposable {
 		
 		isPackDirty = true;
 		isModDirty = true;
-		isStarted = false;
 	}
 	
 	public List<ResourceData> compile() {

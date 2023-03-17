@@ -16,7 +16,6 @@ import com.andedit.viewmc.util.LoaderTask;
 import com.andedit.viewmc.util.Logger;
 import com.andedit.viewmc.util.Progress;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.JsonReader;
 import com.badlogic.gdx.utils.OrderedSet;
 import com.badlogic.gdx.utils.StreamUtils;
 
@@ -122,18 +121,15 @@ public class ResourceLoader implements LoaderTask<Resources> {
 			for (var id : modelIds) {
 				progress.incStep();
 				if (assets.blockModels.containsKey(id)) continue;
-				var json = BlockModelJson.MISSING_MODEL;
 				
 				var entry = map.get(id);
 				if (entry != null) {
 					try (var stream = new BufferedInputStream(loader.getInputStream(entry), buffer)) {
-						json = new BlockModelJson(reader.parse(stream), textureIds, modelParents);
+						assets.blockModels.put(id, new BlockModelJson(reader.parse(stream), textureIds, modelParents));
 					} catch (Exception e) {
 						LOGGER.info("Failed to load model " + id, e);
 					}
 				}
-
-				assets.blockModels.put(id, json);
 			}
 			
 			// Load block model parents as a java object and fetch all textures.
@@ -154,7 +150,7 @@ public class ResourceLoader implements LoaderTask<Resources> {
 				modelParents = newModelParents;
 			}
 			
-			// Load every models with ids from the previous pack
+			// Load every textures with ids from the previous pack
 			progress.newStep(assets.blockTextures.size);
 			keys.size = 0;
 			keys.addAll(assets.blockTextures.orderedKeys());
@@ -173,7 +169,7 @@ public class ResourceLoader implements LoaderTask<Resources> {
 				}
 			}
 			
-			// Load block model parents as a raw bytes
+			// Load textures as a raw bytes
 			map = loader.getMap("texture");
 			progress.newStep(textureIds.size);
 			for (var id : textureIds) {

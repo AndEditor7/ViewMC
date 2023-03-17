@@ -17,7 +17,7 @@ import com.badlogic.gdx.utils.ObjectMap;
 
 class TextureMaker {
 	
-	private final Pixmap atlas;
+	final Pixmap atlas;
 	private final int width, height;
 	private final int idxWidth, idxHeight;
 	
@@ -35,7 +35,7 @@ class TextureMaker {
 		this.isFilled = new boolean[idxWidth][idxHeight];
 	}
 	
-	public Pair<Pixmap, ObjectMap<Identifier, Sprite>> build(RawResources assets, Array<Pair<Identifier, Pixmap>> pixList, Array<Animated> animatedList, TextureAtlas textures, Progress progress) {
+	public ObjectMap<Identifier, Sprite> build(RawResources assets, Array<Pair<Identifier, Pixmap>> pixList, Array<Animated> animatedList, TextureAtlas textures, Progress progress) {
 		var spriteMap = new ObjectMap<Identifier, Sprite>(assets.blockTextures.size);
 		var pixDispose = new Array<Pixmap>(assets.blockTextures.size);
 		
@@ -119,7 +119,7 @@ class TextureMaker {
 		pixDispose.forEach(Pixmap::dispose);
 		atlas.setFilter(Pixmap.Filter.NearestNeighbour);
 		
-		return new Pair<>(atlas, spriteMap);
+		return spriteMap;
 	}
 	
 	private boolean isValidSpot(int x, int y, int width, int height) {

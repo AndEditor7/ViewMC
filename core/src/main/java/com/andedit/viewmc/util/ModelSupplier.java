@@ -1,5 +1,7 @@
 package com.andedit.viewmc.util;
 
+import static com.andedit.viewmc.resource.ResourceLoader.LOGGER;
+
 import com.andedit.viewmc.block.BlockModel;
 import com.andedit.viewmc.block.TextureAtlas;
 import com.andedit.viewmc.resource.blockmodel.BlockModelJson;
@@ -29,7 +31,13 @@ public class ModelSupplier {
 	public final BlockModel get(Identifier id) {
 		var model = map.get(id);
 		if (model == null) {
-			map.put(id, model = new BlockModel(blockModels.get(id), textures));
+			var json = blockModels.get(id);
+			if (json == null) {
+				map.put(id, model = BlockModel.missingModel(textures.getMissingSprite()));
+				LOGGER.info("Missing model " + id);
+			} else {
+				map.put(id, model = new BlockModel(json, textures));
+			}
 		}
 		return model;
 	}

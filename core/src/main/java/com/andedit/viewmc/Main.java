@@ -107,6 +107,8 @@ public class Main extends ApplicationAdapter {
 
 		screen.show();
 		inputs.set(screen.getInput());
+		
+		System.gc();
 	}
 	
 	public void setScreen(Screen screen) {

@@ -29,15 +29,4 @@ public class Element {
 			faces.put(face, new Face(face, v));
 		}
 	}
-
-	Element() {
-		from = new Vector3();
-		to = new Vector3(16, 16, 16);
-		rotation = null;
-		shade = true;
-		faces = new EnumMap<>(Facing.class);
-		for (var face : Facing.values()) {
-			faces.put(face, new Face(face));
-		}
-	}
 }

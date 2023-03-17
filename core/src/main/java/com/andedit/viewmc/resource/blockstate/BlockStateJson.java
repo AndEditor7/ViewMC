@@ -18,18 +18,25 @@ public class BlockStateJson {
 	private final OrderedSet<Identifier> models = new OrderedSet<>();
 	
 	public BlockStateJson(JsonValue value, OrderedSet<Identifier> modelsSet) {
-		value = value.child;
-		var name = value.name;
-		if (name.equals("variants")) {
-			variants = new ArrayList<>(value.size);
-			for (var obj : value) {
-				variants.add(new VariantJson(obj, models));
+		
+		var variants = value.get("variants");
+		if (variants != null) {
+			this.variants = new ArrayList<>(variants.size);
+			for (var obj : variants) {
+				this.variants.add(new VariantJson(obj, models));
 			}
-		} else if (name.equals("multipart")) {
-			cases = new ArrayList<>(value.size);
-			for (var obj : value) {
+		}
+		
+		var multipart = value.get("multipart");
+		if (multipart != null) {
+			cases = new ArrayList<>(multipart.size);
+			for (var obj : multipart) {
 				cases.add(new CaseJson(obj, models));
 			}
+		}
+		
+		if (variants == null && multipart == null) {
+			throw new IllegalStateException("No variants or multipart");
 		}
 		
 		modelsSet.addAll(models);
@@ -45,7 +52,10 @@ public class BlockStateJson {
 
 	public void addAll(ObjectMap<Identifier, BlockModelJson> src, ObjectMap<Identifier, BlockModelJson> dest) {
 		for (var model : models) {
-			dest.put(model, src.get(model));
+			var srcModel = src.get(model);
+			if (srcModel != null) {
+				dest.put(model, srcModel);
+			}
 		}
 	}
 }

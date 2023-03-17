@@ -13,21 +13,12 @@ import com.badlogic.gdx.utils.OrderedSet;
 
 public class BlockModelJson {
 	
-	public static final BlockModelJson MISSING_MODEL = new BlockModelJson();
-	
 	public final @Null Identifier parent;
 	public OrderedMap<String, String> textureMap;
 	public List<Element> elements;
 	
 	private boolean isLoaded;
 	private Boolean ambientOcclusion;
-	
-	private BlockModelJson() {
-		parent = null;
-		ambientOcclusion = false;
-		elements = List.of(new Element());
-		textureMap = new OrderedMap<>();
-	}
 	
 	public BlockModelJson(JsonValue value, OrderedSet<Identifier> textureSet, OrderedSet<Identifier> modelParents) {
 		var val = value.get("parent");

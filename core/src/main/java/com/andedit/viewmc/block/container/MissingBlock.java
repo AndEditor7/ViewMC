@@ -21,10 +21,7 @@ public class MissingBlock extends Block {
 	
 	@Override
 	public void loadModel(BlockStateJson state, OrderedMap<Identifier, BlockModelJson> blockModels, TextureAtlas textures) {
-		var sprite = textures.getSprite(new Identifier("missing"));
-		model = new BlockModel();
-		var cube = model.cube(0, 0, 0, 16, 16, 16);
-		cube.regAll(sprite);
+		model = BlockModel.missingModel(textures.getMissingSprite());
 	}
 	
 	public void build(Section section, MeshProvider provider, BlockState state, int x, int y, int z) {
