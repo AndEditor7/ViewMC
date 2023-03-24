@@ -4,6 +4,7 @@ import static com.andedit.viewmc.Main.main;
 
 import com.andedit.viewmc.Assets;
 import com.andedit.viewmc.MenuCore;
+import com.andedit.viewmc.ViewCore;
 import com.andedit.viewmc.ui.util.BaseUI;
 import com.andedit.viewmc.ui.util.PosOffset;
 import com.andedit.viewmc.util.Util;
@@ -23,16 +24,25 @@ public class MenuUI extends BaseUI {
 		
 		var button = new TextButton("Open World", Assets.skin);
 		button.setDisabled(!hasResource);
-		button.setSize(140, 25);
-		button.setPosition(0, 10, Align.center);
+		button.setSize(140, 22);
+		button.setPosition(0, 20, Align.center);
 		group.addActor(button);
 		button.addListener(Util.newListener(() -> {
 			core.manager.setUI(new DropWorldUI(core), true);
 		}));
 		
+		button = new TextButton("Open Structure", Assets.skin);
+		button.setDisabled(!hasResource);
+		button.setSize(140, 22);
+		button.setPosition(0, -15, Align.center);
+		group.addActor(button);
+		button.addListener(Util.newListener(() -> {
+			main.setScreen(new ViewCore(main.resources));
+		}));
+		
 		button = new TextButton("Resources", Assets.skin.get(hasResource?"default":"flash", TextButtonStyle.class));
-		button.setSize(140, 25);
-		button.setPosition(0, -30, Align.center);
+		button.setSize(140, 22);
+		button.setPosition(0, -50, Align.center);
 		group.addActor(button);
 		button.addListener(Util.newListener(() -> {
 			core.manager.setUI(new DropCoreUI(core), true);

@@ -1,5 +1,6 @@
 package com.andedit.viewmc.ui;
 
+import static com.andedit.viewmc.Main.LOGGER;
 import static com.andedit.viewmc.Main.main;
 import static com.badlogic.gdx.Gdx.graphics;
 
@@ -47,14 +48,9 @@ public class LoadingUI<T> extends BaseUI {
 	public static LoadingUI<Resources> of(ResourcePacker packer, MenuCore core) {
 		return new LoadingUI<>(Statics.meshExe, packer.getResourceLoader(), future -> {
 			try {
-				var resources = future.get();
-				main.setResources(resources);
+				main.setResources(future.get());
 			} catch (Exception e) {
-				if (e.getCause() != null) {
-					e.getCause().printStackTrace();
-				} else {
-					e.printStackTrace();
-				}
+				LOGGER.error("Failed to load the resources", e.getCause() == null ? e : e.getCause());
 				core.manager.setUI(new ResourcesUI(core), true);
 				return;
 			}

@@ -10,15 +10,15 @@ import com.andedit.viewmc.util.Cull;
 import com.andedit.viewmc.util.Facing;
 import com.andedit.viewmc.util.Identifier;
 import com.andedit.viewmc.util.ModelSupplier;
-import com.andedit.viewmc.world.Section;
+import com.andedit.viewmc.world.BlockView;
 import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.utils.Null;
 import com.badlogic.gdx.utils.OrderedMap;
 
-public class Block {
+public class Block implements BlockLike {
 	
 	protected BlockState state;
-	protected Renderable renderable;
+	protected BlockLike renderable;
 	protected String id;
 
 	public Block() {
@@ -39,7 +39,7 @@ public class Block {
 		return new ModelSupplier(blockModels, textures);
 	}
 	
-	protected Renderable getRenderable(BlockStateJson state, ModelSupplier supplier) {
+	protected BlockLike getRenderable(BlockStateJson state, ModelSupplier supplier) {
 		if (state.isVariants()) {
 			return new Variants(state, supplier);
 		}
@@ -56,20 +56,24 @@ public class Block {
 		return new BlockState(this);
 	}
 
-	public void build(Section section, MeshProvider provider, BlockState state, int x, int y, int z) {
-		renderable.build(section, provider, state, x, y, z);
+	@Override
+	public void build(MeshProvider provider, BlockView view, BlockState state, int x, int y, int z) {
+		renderable.build(provider, view, state, x, y, z);
 	}
 
-	public void getQuads(BlockState state, Collection<Quad> list, int x, int y, int z) {
-		renderable.getQuads(state, list, x, y, z);
+	@Override
+	public void getQuads(Collection<Quad> list, BlockView view, BlockState state, int x, int y, int z) {
+		renderable.getQuads(list, view, state, x, y, z);
 	}
 
-	public void getBoxes(BlockState state, Collection<BoundingBox> list, int x, int y, int z) {
-		renderable.getBoxes(state, list, x, y, z);
+	@Override
+	public void getBoxes(Collection<BoundingBox> list, BlockView view, BlockState state, int x, int y, int z) {
+		renderable.getBoxes(list, view, state, x, y, z);
 	}
 	
-	public boolean isFullOpaque(BlockState state, int blockLight, int x, int y, int z) {
-		return renderable.isFullOpaque(state, x, y, z) && blockLight == 0;
+	@Override
+	public boolean isFullOpaque(BlockView view, BlockState state, int x, int y, int z) {
+		return renderable.isFullOpaque(view, state, x, y, z);
 	}
 	
 	public boolean isWaterLogged(BlockState state) {
@@ -92,4 +96,6 @@ public class Block {
 	public String getId() {
 		return id;
 	}
+
+	
 }

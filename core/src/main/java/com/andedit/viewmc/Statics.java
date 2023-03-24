@@ -12,7 +12,7 @@ public class Statics {
 	
 	static void init() {
 		chunkExe = Executors.newFixedThreadPool(2, new DaemonThreadFactory("Chunk Loader"));
-		//meshExe = Executors.newFixedThreadPool(2, new DaemonThreadFactory("Mesh Builder"));
+//		meshExe = Executors.newFixedThreadPool(2, new DaemonThreadFactory("Mesh Builder"));
 		meshExe = Executors.newSingleThreadExecutor(new DaemonThreadFactory("Mesh Builder"));
 	}
 	

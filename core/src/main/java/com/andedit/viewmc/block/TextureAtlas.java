@@ -118,7 +118,7 @@ public class TextureAtlas implements Disposable {
 	}
 
 	/** Only update if the texture is binded. */
-	public void update(OrderedSet<Identifier> textureToAnimate) {
+	public void update(Array<Identifier> textureToAnimate) {
 		time += Gdx.graphics.getDeltaTime();
 		if (time > TICK) {
 			if (++tick < 0) tick = 0;
@@ -153,6 +153,7 @@ public class TextureAtlas implements Disposable {
 	public void dispose() {
 		if (atlas != null && !atlas.isDisposed()) atlas.dispose();
 		animated.forEach(Animated::dispose);
+		animated.clear();
 		if (texture != null) {
 			texture.dispose();
 			binder.dispose();

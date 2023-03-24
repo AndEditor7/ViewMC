@@ -51,12 +51,12 @@ public class Chunk {
 		var list = data.getListTag("sections");
 		if (list == null) return; 
 		for (var compound : list.asCompoundTagList()) {
-			var seletion = new Section(resources, compound);
+			var seletion = new Section19(resources, compound);
 			sections.add(seletion);
 		}
 		
 		//new Sort().sort(sections.items, 0, sections.size);
-		min = sections.first().y;
+		min = sections.first().getY();
 	}
 	
 	public boolean canBuild() {
@@ -92,9 +92,9 @@ public class Chunk {
 	 * The coordinates represent the location of the block inside of this Chunk.
 	 * @return The block light level.
 	 */
-	public int getBlockLight(int x, int y, int z) {
-		var seletion = getSectionIn(y);
-		return seletion == null ? Lights.DEFAULT_BLOCK : seletion.getBlockLight(x, y&15, z);
+	public int getBlockLight(int chunkX, int chunkY, int chunkZ) {
+		var seletion = getSectionIn(chunkY);
+		return seletion == null ? Lights.DEFAULT_BLOCK : seletion.getBlockLightAt(chunkX, chunkY&15, chunkZ);
 	}
 	
 	/**
@@ -102,9 +102,9 @@ public class Chunk {
 	 * The coordinates represent the location of the block inside of this Chunk.
 	 * @return The sky light level.
 	 */
-	public int getSkyLight(int x, int y, int z) {
-		var seletion = getSectionIn(y);
-		return seletion == null ? Lights.DEFAULT_SKY : seletion.getSkyLight(x, y&15, z);
+	public int getSkyLight(int chunkX, int chunkY, int chunkZ) {
+		var seletion = getSectionIn(chunkY);
+		return seletion == null ? Lights.DEFAULT_SKY : seletion.getSkyLightAt(chunkX, chunkY&15, chunkZ);
 	}
 	
 	/**
@@ -112,9 +112,9 @@ public class Chunk {
 	 * The coordinates represent the location of the block inside of this Chunk.
 	 * @return The light data.
 	 */
-	public int getLight(int x, int y, int z) {
-		var seletion = getSectionIn(y);
-		return seletion == null ? Lights.DEFAULT_LIGHT : seletion.getLight(x, y&15, z);
+	public int getLight(int chunkX, int chunkY, int chunkZ) {
+		var seletion = getSectionIn(chunkY);
+		return seletion == null ? Lights.DEFAULT_LIGHT : seletion.getLightAt(chunkX, chunkY&15, chunkZ);
 	}
 	
 	/**
@@ -122,9 +122,9 @@ public class Chunk {
 	 * The coordinates represent the location of the block inside of this Chunk.
 	 * @return The block state data of this block.
 	 */
-	public BlockState getBlockState(int x, int y, int z) {
-		var seletion = getSectionIn(y);
-		return seletion == null ? AirBlock.INSTANCE.getState() : seletion.getBlockState(x, y&15, z);
+	public BlockState getBlockState(int chunkX, int chunkY, int chunkZ) {
+		var seletion = getSectionIn(chunkY);
+		return seletion == null ? AirBlock.INSTANCE.getState() : seletion.getBlockstateAt(chunkX, chunkY&15, chunkZ);
 	}
 	
 	/**
@@ -132,9 +132,9 @@ public class Chunk {
 	 * The coordinates represent the location of the block inside of this Section.
 	 * @return The biome.
 	 */
-	public Biome getBiome(int x, int y, int z) {
-		var seletion = getSectionIn(y);
-		return seletion == null ? Biomes.VOID : seletion.getBiome(x, y&15, z);
+	public Biome getBiome(int chunkX, int chunkY, int chunkZ) {
+		var seletion = getSectionIn(chunkY);
+		return seletion == null ? Biomes.VOID : seletion.getBiomeAt(chunkX, chunkY&15, chunkZ);
 	}
 	
 	/** zero-based 

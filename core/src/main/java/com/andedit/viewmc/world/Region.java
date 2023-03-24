@@ -45,94 +45,89 @@ public class Region {
 	/**
 	 * Fetches a block light based on a block location from this region.
 	 * The coordinates represent the location of the block inside of this Region.
-	 * @param x The x-coordinate of the block in this Region
-	 * @param y The y-coordinate of the block in this Region
-	 * @param z The z-coordinate of the block in this Region
 	 * @return The block light level.
 	 */
-	public int getBlockLight(int x, int y, int z) {
-		var chunk = getChunk(x>>4, z>>4);
-		return chunk == null ? Lights.DEFAULT_BLOCK : chunk.getBlockLight(x&15, y, z&15);
+	public int getBlockLight(int regionX, int regionY, int regionZ) {
+		var chunk = getChunk(regionX>>4, regionZ>>4);
+		return chunk == null ? Lights.DEFAULT_BLOCK : chunk.getBlockLight(regionX&15, regionY, regionZ&15);
 	}
 	
 	/**
 	 * Fetches a sky light based on a block location from this region.
 	 * The coordinates represent the location of the block inside of this Region.
-	 * @param x The x-coordinate of the block in this Region
-	 * @param y The y-coordinate of the block in this Region
-	 * @param z The z-coordinate of the block in this Region
 	 * @return The sky light level.
 	 */
-	public int getSkyLight(int x, int y, int z) {
-		var chunk = getChunk(x>>4, z>>4);
-		return chunk == null ? Lights.DEFAULT_SKY : chunk.getSkyLight(x&15, y, z&15);
+	public int getSkyLight(int regionX, int regionY, int regionZ) {
+		var chunk = getChunk(regionX>>4, regionZ>>4);
+		return chunk == null ? Lights.DEFAULT_SKY : chunk.getSkyLight(regionX&15, regionY, regionZ&15);
 	}
 	
 	/**
 	 * Fetches a light based on a block location from this region.
 	 * The coordinates represent the location of the block inside of this Region.
-	 * @param x The x-coordinate of the block in this Region
-	 * @param y The y-coordinate of the block in this Region
-	 * @param z The z-coordinate of the block in this Region
 	 * @return The light data.
 	 */
-	public int getLight(int x, int y, int z) {
-		var chunk = getChunk(x>>4, z>>4);
-		return chunk == null ? Lights.DEFAULT_LIGHT : chunk.getLight(x&15, y, z&15);
+	public int getLight(int regionX, int regionY, int regionZ) {
+		var chunk = getChunk(regionX>>4, regionZ>>4);
+		return chunk == null ? Lights.DEFAULT_LIGHT : chunk.getLight(regionX&15, regionY, regionZ&15);
 	}
 	
 	/**
 	 * Fetches a block state based on a block location from this region.
 	 * The coordinates represent the location of the block inside of this Region.
-	 * @param x The x-coordinate of the block in this Region
-	 * @param y The y-coordinate of the block in this Region
-	 * @param z The z-coordinate of the block in this Region
 	 * @return The block state data of this block.
 	 */
-	public BlockState getBlockState(int x, int y, int z) {
-		var chunk = getChunk(x>>4, z>>4);
-		return chunk == null ? AirBlock.INSTANCE.getState() : chunk.getBlockState(x&15, y, z&15);
+	public BlockState getBlockState(int regionX, int regionY, int regionZ) {
+		var chunk = getChunk(regionX>>4, regionZ>>4);
+		return chunk == null ? AirBlock.INSTANCE.getState() : chunk.getBlockState(regionX&15, regionY, regionZ&15);
 	}
 	
 	/**
-	 * Fetches a biome based on a block location from this section.
-	 * The coordinates represent the location of the block inside of this Section.
-	 * @param x The x-coordinate of the block in this Section
-	 * @param y The y-coordinate of the block in this Section
-	 * @param z The z-coordinate of the block in this Section
-	 * @return The biome.
+	 * Fetches a Biome based on a block location from this Section.
+	 * The coordinates represent the location of the block inside of this Region.
+	 * @return The Biome.
 	 */
-	public Biome getBiome(int x, int y, int z) {
-		var chunk = getChunk(x>>4, z>>4);
-		return chunk == null ? Biomes.VOID : chunk.getBiome(x&15, y, z&15);
+	public Biome getBiome(int regionX, int regionY, int regionZ) {
+		var chunk = getChunk(regionX>>4, regionZ>>4);
+		return chunk == null ? Biomes.VOID : chunk.getBiome(regionX&15, regionY, regionZ&15);
 	}
 	
+	/**
+	 * Fetches a Section based on a Section location from this Region.
+	 * The coordinates represent the location of the section inside of this Region.
+	 * @return The Section.
+	 */
 	@Null
-	public Section getSection(int x, int y, int z) {
-		var chunk = getChunk(x, z);
-		return chunk == null ? null : chunk.getSection(y);
+	public Section getSection(int regionX, int regionY, int regionZ) {
+		var chunk = getChunk(regionX, regionZ);
+		return chunk == null ? null : chunk.getSection(regionY);
 	}
 	
+	/**
+	 * Fetches a Chunk based on a Chunk location from this region.
+	 * The coordinates represent the location of the section inside of this Region.
+	 * @return The Chunk.
+	 */
 	@Null
-	public Chunk getChunk(int x, int z) {
-		if (x < 0 || z < 0 || x >= SIZE || z >= SIZE) {
+	public Chunk getChunk(int regionX, int regionZ) {
+		if (regionX < 0 || regionZ < 0 || regionX >= SIZE || regionZ >= SIZE) {
 			return null;
 		}
-		return chunks.get(x + (z << 5));
+		return chunks.get(regionX + (regionZ << 5));
 	}
 	
-	public boolean shouldLoadChunk(int x, int z) {
-		if (x < 0 || z < 0 || x >= SIZE || z >= SIZE) {
+	public boolean shouldLoadChunk(int regionX, int regionZ) {
+		if (regionX < 0 || regionZ < 0 || regionX >= SIZE || regionZ >= SIZE) {
 			throw new ArrayIndexOutOfBoundsException();
 		}
-		return chunksToLoad[x + (z << 5)];
+		return chunksToLoad[regionX + (regionZ << 5)];
 	}
 	
-	public void setChunkToLoad(boolean bool, int x, int z) {
-		if (x < 0 || z < 0 || x >= SIZE || z >= SIZE) {
+	public void setChunkToLoad(boolean bool, int regionX, int regionZ) {
+		if (regionX < 0 || regionZ < 0 || regionX >= SIZE || regionZ >= SIZE) {
 			throw new ArrayIndexOutOfBoundsException();
 		}
-		chunksToLoad[x + (z << 5)] = bool;
+		chunksToLoad[regionX + (regionZ << 5)] = bool;
 	}
 	
 	void putChunk(Chunk chunk) {

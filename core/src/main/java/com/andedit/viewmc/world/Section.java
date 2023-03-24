@@ -1,93 +1,48 @@
 package com.andedit.viewmc.world;
 
 import com.andedit.viewmc.biome.Biome;
-import com.andedit.viewmc.biome.Biomes;
 import com.andedit.viewmc.block.BlockState;
-import com.andedit.viewmc.block.container.AirBlock;
 import com.andedit.viewmc.resource.Resources;
-import com.badlogic.gdx.utils.Null;
+import com.andedit.viewmc.util.Facing;
 
-import net.querz.nbt.tag.CompoundTag;
-import net.querz.nbt.tag.LongArrayTag;
-
-public class Section implements Comparable<Section> {
+public abstract class Section implements BlockRenderView {
 	public static final int SIZE = 16;
 	public static final int MASK = SIZE-1;
 
-	public final byte y;
-	
-	private final byte[] blockLight;
-	private final byte[] skyLight;
-	
-	private final @Null BlockState[] blockPalette;
-	private final long[] blockStates;
-	private final int blockBits;
-	
-	private final @Null Biome[] biomePalette;
-	private final long[] biomes;
-	private final int biomeBits;
+	protected volatile World world;
+	protected volatile Chunk chunk;
 	
 	public boolean isDirty = true;
 	
-	private volatile World world;
-	private volatile Chunk chunk;
-	
-	public Section(Resources resources, CompoundTag data) {
-		this.y = data.getNumber("Y").byteValue();
-		this.blockLight = data.getByteArray("BlockLight");
-		this.skyLight = data.getByteArray("SkyLight");
-		
-		var block_states = data.getCompoundTag("block_states");
-		if (block_states != null) {
-			var rawPalette = block_states.getListTag("palette");
-			if (rawPalette == null) {
-				blockPalette = null;
-			} else {
-				blockPalette = new BlockState[rawPalette.size()];
-				var list = rawPalette.asCompoundTagList();
-				for (int i = 0; i < blockPalette.length; i++) {
-					blockPalette[i] = new BlockState(resources, list.get(i));
-				}
-			}
-			
-			blockStates = block_states.getLongArray("data");
-			blockBits = blockStates.length >> 6;
-		} else {
-			blockStates = LongArrayTag.ZERO_VALUE;
-			blockPalette = null;
-			blockBits = 0;
-			isDirty = false;
-		}
-		
-		var biomes = data.getCompoundTag("biomes");
-		if (biomes != null) {
-			var rawPalette = biomes.getListTag("palette");
-			if (rawPalette == null) {
-				biomePalette = null;
-			} else {
-				biomePalette = new Biome[rawPalette.size()];
-				var list = rawPalette.asStringTagList();
-				for (int i = 0; i < biomePalette.length; i++) {
-					biomePalette[i] = Biomes.toBiome(list.get(i).getValue());
-				}
-			}
-			
-			this.biomes = biomes.getLongArray("data");
-			biomeBits = 32 - fastNumberOfLeadingZeroes(Math.max(this.biomes.length-1, 1));
-		} else {
-			this.biomes = LongArrayTag.ZERO_VALUE;
-			biomePalette = null;
-			biomeBits = 0;
-		}
-	}
+	int graph = -1;
+	int steps = 1;
 	
 	public void init(World world, Chunk chunk) {
 		this.world = world;
 		this.chunk = chunk;
 	}
 	
-	public World getWorld() {
-		return world;
+	protected void buildGrid() {
+		new CaveCullingGraph(this).buildGraph();
+	}
+	
+	public boolean canEnter(Facing fromChunk, Facing toChunk) {
+		if (fromChunk.axis == toChunk.axis) {
+			return CaveCullingGraph.getGraph(graph, toChunk.xOffset, toChunk.yOffset, toChunk.zOffset);
+		} else {
+			return CaveCullingGraph.getGraph(graph, fromChunk.xOffset+toChunk.xOffset, fromChunk.yOffset+toChunk.yOffset, fromChunk.zOffset+toChunk.zOffset);
+		}
+	}
+	
+	public int getWalkableSteps() {
+		return steps;
+	}
+	
+	public abstract byte getY();
+	
+	@Override
+	public Resources getResources() {
+		return world.getResources();
 	}
 	
 	/**
@@ -95,30 +50,22 @@ public class Section implements Comparable<Section> {
 	 * The coordinates represent the location of the block inside of this Section.
 	 * @return The block light level.
 	 */
-	public int getBlockLight(int x, int y, int z) {
-		if (blockLight.length == 0) return Lights.DEFAULT_BLOCK;
-		final int index = getBlockIndex(x, y, z);
-        return blockLight[index >> 1] >> 4 * (index & 1) & 0xF;
-	}
+	public abstract int getBlockLightAt(int sectionX, int sectionY, int sectionZ);
 	
 	/**
 	 * Fetches a sky light based on a block location from this section.
 	 * The coordinates represent the location of the block inside of this Section.
 	 * @return The sky light level.
 	 */
-	public int getSkyLight(int x, int y, int z) {
-		if (skyLight.length == 0) return Lights.DEFAULT_SKY;
-		final int index = getBlockIndex(x, y, z);
-        return skyLight[index >> 1] >> 4 * (index & 1) & 0xF;
-	}
+	public abstract int getSkyLightAt(int sectionX, int sectionY, int sectionZ);
 	
 	/**
 	 * Fetches a light based on a block location from this section.
 	 * The coordinates represent the location of the block inside of this Section.
 	 * @return The light data.
 	 */
-	public int getLight(int x, int y, int z) {
-		return (getBlockLight(x, y, z) << 4) | getSkyLight(x, y, z);
+	public int getLightAt(int sectionX, int sectionY, int sectionZ) {
+		return (getBlockLightAt(sectionX, sectionY, sectionZ) << 4) | getSkyLightAt(sectionX, sectionY, sectionZ);
 	}
 	
 	/**
@@ -126,32 +73,27 @@ public class Section implements Comparable<Section> {
 	 * The coordinates represent the location of the block inside of this Section.
 	 * @return The block state data of this block.
 	 */
-	public BlockState getBlockState(int x, int y, int z) {
-		if (blockPalette == null) return AirBlock.INSTANCE.getState(); 
-		return blockPalette[getPaletteIndex(getBlockIndex(x, y, z), blockBits, blockStates)];
-	}
+	public abstract BlockState getBlockstateAt(int sectionX, int sectionY, int sectionZ);
 	
 	/**
 	 * Fetches a biome based on a block location from this section.
 	 * The coordinates represent the location of the block inside of this Section.
 	 * @return The biome.
 	 */
-	public Biome getBiome(int x, int y, int z) {
-		if (biomePalette == null) return Biomes.VOID; 
-		return biomePalette[getPaletteIndex(getBiomeIndex(x>>2, y>>2, z>>2), biomeBits, biomes)];
-	}
+	public abstract Biome getBiomeAt(int sectionX, int sectionY, int sectionZ);
 	
 	/**
 	 * Fetches a light based on a block location from world space.
 	 * The coordinates represent the location of the block in world space.
 	 * @return The light data.
 	 */
-	public int getLightAt(int x, int y, int z) {
+	@Override
+	public int getLight(int worldX, int worldY, int worldZ) {
 		var chunk = this.chunk;
-		if (this.y != (y >> 4) || chunk.worldX != (x >> 4) || chunk.worldZ != (z >> 4)) {
-			return world.getLight(x, y, z);
+		if (getY() != (worldY >> 4) || chunk.worldX != (worldX >> 4) || chunk.worldZ != (worldZ >> 4)) {
+			return world.getLight(worldX, worldY, worldZ);
 		}
-		return getLight(x&15, y&15, z&15);
+		return getLightAt(worldX&15, worldY&15, worldZ&15);
 	}
 	
 	/**
@@ -159,13 +101,13 @@ public class Section implements Comparable<Section> {
 	 * The coordinates represent the location of the block in world space.
 	 * @return The block state data of this block.
 	 */
-	public BlockState getBlockStateAt(int x, int y, int z) {
-		if (blockPalette == null) return AirBlock.INSTANCE.getState(); 
+	@Override
+	public BlockState getBlockstate(int worldX, int worldY, int worldZ) {
 		var chunk = this.chunk;
-		if (this.y != (y >> 4) || chunk.worldX != (x >> 4) || chunk.worldZ != (z >> 4)) {
-			return world.getBlockState(x, y, z);
+		if (getY() != (worldY >> 4) || chunk.worldX != (worldX >> 4) || chunk.worldZ != (worldZ >> 4)) {
+			return world.getBlockstate(worldX, worldY, worldZ);
 		}
-		return getBlockState(x&15, y&15, z&15);
+		return getBlockstateAt(worldX&15, worldY&15, worldZ&15);
 	}
 	
 	/**
@@ -173,16 +115,16 @@ public class Section implements Comparable<Section> {
 	 * The coordinates represent the location of the block in world space.
 	 * @return The biome.
 	 */
-	public Biome getBiomeAt(int x, int y, int z) {
-		if (biomePalette == null) return Biomes.VOID;
+	@Override
+	public Biome getBiome(int worldX, int worldY, int worldZ) {
 		var chunk = this.chunk;
-		if (this.y != (y >> 4) || chunk.worldX != (x >> 4) || chunk.worldZ != (z >> 4)) {
-			return world.getBiome(x, y, z);
+		if (getY() != (worldY >> 4) || chunk.worldX != (worldX >> 4) || chunk.worldZ != (worldZ >> 4)) {
+			return world.getBiome(worldX, worldY, worldZ);
 		}
-		return getBiome(x&15, y&15, z&15);
+		return getBiomeAt(worldX&15, worldY&15, worldZ&15);
 	}
 	
-	private static int getPaletteIndex(int index, int bits, long[] data) {
+	protected int getPaletteIndex(int index, int bits, long[] data) {
 		if (data.length == 0) return 0; 
 		int indicesPerLong = 64 / bits;
 		int longIndex = index / indicesPerLong;
@@ -190,20 +132,20 @@ public class Section implements Comparable<Section> {
 		return (int)bitRange(data[longIndex], startBit, startBit + bits);
 	}
 	
-	private static int getBlockIndex(int x, int y, int z) {
+	protected int getBlockIndex(int x, int y, int z) {
 		return y << 8 | z << 4 | x;
 	}
 	
-	private static int getBiomeIndex(int x, int y, int z) {
+	protected int getBiomeIndex(int x, int y, int z) {
 		return y << 4 | z << 2 | x;
 	}
 
-	private static long bitRange(long value, int from, int to) {
+	protected static long bitRange(long value, int from, int to) {
 		final int waste = 64 - to;
 		return (value << waste) >>> (waste + from);
 	}
 	
-	private static int fastNumberOfLeadingZeroes(int i) {
+	protected static int fastNumberOfLeadingZeroes(int i) {
 		int n = 25;
 		i <<= 24;
 		if (i >>> 28 == 0) {
@@ -216,10 +158,5 @@ public class Section implements Comparable<Section> {
 		}
 		n -= i >>> 31;
 		return n;
-	}
-
-	@Override
-	public int compareTo(Section s) {
-		return Byte.compare(y, s.y);
 	}
 }

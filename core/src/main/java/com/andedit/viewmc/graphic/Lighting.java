@@ -3,8 +3,9 @@ package com.andedit.viewmc.graphic;
 import java.util.Arrays;
 
 import com.andedit.viewmc.util.Facing;
-import com.andedit.viewmc.util.IntsFunction;
 import com.andedit.viewmc.util.Facing.Axis;
+import com.andedit.viewmc.util.IntsFunction;
+import com.andedit.viewmc.world.BlockView;
 import com.andedit.viewmc.world.Lights;
 import com.andedit.viewmc.world.Section;
 import com.badlogic.gdx.math.MathUtils;
@@ -50,14 +51,14 @@ public class Lighting {
 		return needCalculation[face.ordinal()];
 	}
 	
-	public void calculate(Section section, Facing face, int x, int y, int z) {
+	public void calculate(BlockView view, Facing face, int x, int y, int z) {
 		for (int i = 0; i < 9; i++)
-		calculate(section, face, x, y, z, (i%3)-1, (i/3)-1);
+		calculate(view, face, x, y, z, (i%3)-1, (i/3)-1);
 		
 		needCalculation[face.ordinal()] = false;
 	}
 	
-	private void calculate(Section section, Facing face, int x, int y, int z, int u, int v) {
+	private void calculate(BlockView view, Facing face, int x, int y, int z, int u, int v) {
 		var upFace = face.getUpFace();
 		var rightFace = face.getRightFace();
 		
@@ -70,11 +71,11 @@ public class Lighting {
 		int y1 = (rightFace.axis.getInt(Axis.Y)*u) + (upFace.axis.getInt(Axis.Y)*v);
 		int z1 = (rightFace.axis.getInt(Axis.Z)*u) + (upFace.axis.getInt(Axis.Z)*v);
 		
-		int lit0 = setLit(face, section.getLightAt(x+x1, y+y1, z+z1), x1, y1, z1, 0);
-		int lit1 = setLit(face, section.getLightAt(x0+x1, y0+y1, z0+z1), x1, y1, z1, 1);
+		setLit(face, view.getLight(x+x1, y+y1, z+z1), x1, y1, z1, 0);
+		setLit(face, view.getLight(x0+x1, y0+y1, z0+z1), x1, y1, z1, 1);
 		
-		setAO(face, section.getBlockStateAt(x+x1, y+y1, z+z1).isFullOpque(Lights.toBlock(lit0), x+x1, y+y1, z+z1), x1, y1, z1, 0);
-		setAO(face, section.getBlockStateAt(x0+x1, y0+y1, z0+z1).isFullOpque(Lights.toBlock(lit1), x0+x1, y0+y1, z0+z1), x1, y1, z1, 1);
+		setAO(face, view.getBlockstate(x+x1, y+y1, z+z1).isFullOpaque(view, x+x1, y+y1, z+z1), x1, y1, z1, 0);
+		setAO(face, view.getBlockstate(x0+x1, y0+y1, z0+z1).isFullOpaque(view, x0+x1, y0+y1, z0+z1), x1, y1, z1, 1);
 	}
 	
 	public void calculateVert(Facing face, int centerU, int centerV, int sideAu, int sideAv, int sideBu, int sideBv, int cornerU, int cornerV, int uIndex, int vIndex) {

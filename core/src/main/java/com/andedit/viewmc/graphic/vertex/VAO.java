@@ -1,16 +1,14 @@
 package com.andedit.viewmc.graphic.vertex;
 
 import static com.andedit.viewmc.graphic.vertex.VertBuf.buffer;
-import static com.badlogic.gdx.Gdx.gl;
 import static com.badlogic.gdx.Gdx.gl30;
 
 import java.nio.IntBuffer;
 
 import com.andedit.viewmc.graphic.QuadIndex;
-import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.GL30;
 import com.badlogic.gdx.graphics.VertexAttributes;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
-import com.badlogic.gdx.graphics.glutils.VertexBufferObjectWithVAO;
 import com.badlogic.gdx.utils.BufferUtils;
 
 /** Vertex Buffer Object with Vertex Array Object (VBO with VAO)
@@ -35,9 +33,8 @@ public class VAO implements Vertex {
 		vao = intBuf.get();
 		
 		gl30.glBindVertexArray(vao);
-		gl30.glBindBuffer(GL20.GL_ARRAY_BUFFER, handle);
+		gl30.glBindBuffer(GL30.GL_ARRAY_BUFFER, handle);
 		QuadIndex.bind();
-		//attributes.setVertexAttributes(null);
 		gl30.glBindVertexArray(0);
 	}
 	
@@ -48,8 +45,8 @@ public class VAO implements Vertex {
 		if (!isBound) {
 			gl30.glBindVertexArray(vao);
 		}
-		gl.glBindBuffer(GL20.GL_ARRAY_BUFFER, handle);
-		gl.glBufferData(GL20.GL_ARRAY_BUFFER, buffer.remaining(), buffer, glDraw);
+		gl30.glBindBuffer(GL30.GL_ARRAY_BUFFER, handle);
+		gl30.glBufferData(GL30.GL_ARRAY_BUFFER, buffer.remaining(), buffer, glDraw);
 		if (!isBound) {
 			gl30.glBindVertexArray(0);
 		}
@@ -60,7 +57,7 @@ public class VAO implements Vertex {
 		gl30.glBindVertexArray(vao);
 		
 		if (shader != lastShader) {
-			gl.glBindBuffer(GL20.GL_ARRAY_BUFFER, handle);
+			gl30.glBindBuffer(GL30.GL_ARRAY_BUFFER, handle);
 			if (lastShader != null) {
 				unVertexAttributes(lastShader);
 			}

@@ -3,6 +3,7 @@ package com.andedit.viewmc;
 import static com.badlogic.gdx.Gdx.files;
 
 import com.andedit.viewmc.graphic.TexBinder;
+import com.andedit.viewmc.graphic.renderer.ViewRenderer;
 import com.andedit.viewmc.ui.drawable.FlashNinePatchDrawable;
 import com.andedit.viewmc.ui.drawable.TexRegDrawable;
 import com.andedit.viewmc.util.McBitmapFont;
@@ -39,6 +40,8 @@ public class Assets {
 	
 	public static Texture pack;
 	
+	public static ViewRenderer viewRenderer;
+	
 	public static final Skin skin = new Skin();
 	
 	public static BitmapFontCache font() {
@@ -64,6 +67,8 @@ public class Assets {
 		leftArrow.flip(true, false);
 		
 		frame = new NinePatch(new TextureRegion(guiTex, 0, 124, 4, 4), 1, 1, 1, 1);
+		
+		viewRenderer = new ViewRenderer();
 		
 		var pixmap = new Pixmap(files.internal("day_light.png"));
 		var buffer = pixmap.getPixels();
@@ -171,5 +176,6 @@ public class Assets {
 		lightMap.dispose();
 		lightMapBind.dispose();
 		pack.dispose();
+		viewRenderer.dispose();
 	}
 }

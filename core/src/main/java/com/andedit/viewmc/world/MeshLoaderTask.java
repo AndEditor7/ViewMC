@@ -28,10 +28,10 @@ public class MeshLoaderTask implements Callable<Void> {
 			for (int x = 0; x < Section.SIZE; x++)
 			for (int y = 0; y < Section.SIZE; y++)
 			for (int z = 0; z < Section.SIZE; z++) {
-				var state = section.getBlockState(x, y, z);
-				state.build(section, provider, xPos+x, yPos+y, zPos+z);
+				var state = section.getBlockstateAt(x, y, z);
+				state.build(provider, section, xPos+x, yPos+y, zPos+z);
 				if (state.isWaterlogged() && state.block != water) {
-					water.build(section, provider, water.getState(), xPos+x, yPos+y, zPos+z);
+					water.build(provider, section, water.getState(), xPos+x, yPos+y, zPos+z);
 				}
 			}
 		}

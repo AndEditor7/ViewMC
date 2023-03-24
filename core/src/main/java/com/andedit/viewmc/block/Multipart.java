@@ -13,10 +13,12 @@ import com.andedit.viewmc.resource.blockstate.WhenJson;
 import com.andedit.viewmc.util.ModelSupplier;
 import com.andedit.viewmc.util.Pair;
 import com.andedit.viewmc.util.Util;
+import com.andedit.viewmc.world.Section19;
+import com.andedit.viewmc.world.BlockView;
 import com.andedit.viewmc.world.Section;
 import com.badlogic.gdx.math.collision.BoundingBox;
 
-public class Multipart implements Renderable {
+public class Multipart implements BlockLike {
 
 	private final List<Case> cases;
 	
@@ -29,32 +31,32 @@ public class Multipart implements Renderable {
 	}
 
 	@Override
-	public void build(Section section, MeshProvider provider, BlockState state, int x, int y, int z) {
+	public void build(MeshProvider provider, BlockView view, BlockState state, int x, int y, int z) {
 		for (int i = 0; i < cases.size(); i++) {
-			cases.get(i).build(section, provider, state, x, y, z);
+			cases.get(i).build(provider, view, state, x, y, z);
 		}
 	}
 
 	@Override
-	public void getQuads(BlockState state, Collection<Quad> collection, int x, int y, int z) {
+	public void getQuads(Collection<Quad> collection, BlockView view, BlockState state, int x, int y, int z) {
 		for (int i = 0; i < cases.size(); i++) {
-			cases.get(i).getQuads(state, collection, x, y, z);
+			cases.get(i).getQuads(collection, view, state, x, y, z);
 		}
 	}
 
 	@Override
-	public void getBoxes(BlockState state, Collection<BoundingBox> collection, int x, int y, int z) {
+	public void getBoxes(Collection<BoundingBox> collection, BlockView view, BlockState state, int x, int y, int z) {
 		for (int i = 0; i < cases.size(); i++) {
-			cases.get(i).getBoxes(state, collection, x, y, z);
+			cases.get(i).getBoxes(collection, view, state, x, y, z);
 		}
 	}
 	
 	@Override
-	public boolean isFullOpaque(BlockState state, int x, int y, int z) {
+	public boolean isFullOpaque(BlockView view, BlockState state, int x, int y, int z) {
 		return false;
 	}
 	
-	private static class Case implements Renderable {
+	private static class Case implements BlockLike {
 		
 		final Predicate<BlockState> when;
 		final Weighted<BlockModel> models; // apply
@@ -69,28 +71,28 @@ public class Multipart implements Renderable {
 		}
 
 		@Override
-		public void build(Section section, MeshProvider provider, BlockState state, int x, int y, int z) {
+		public void build(MeshProvider provider, BlockView view, BlockState state, int x, int y, int z) {
 			if (when.test(state)) {
-				models.apply((int)Util.hashCode(x, y, z)).build(section, provider, state, x, y, z);
+				models.apply((int)Util.hashCode(x, y, z)).build(provider, view, state, x, y, z);
 			}
 		}
 
 		@Override
-		public void getQuads(BlockState state, Collection<Quad> collection, int x, int y, int z) {
+		public void getQuads(Collection<Quad> collection, BlockView view, BlockState state, int x, int y, int z) {
 			if (when.test(state)) {
-				models.apply((int)Util.hashCode(x, y, z)).getQuads(collection);
+				models.apply((int)Util.hashCode(x, y, z)).getQuads(collection, view, state, x, y, z);
 			}
 		}
 
 		@Override
-		public void getBoxes(BlockState state, Collection<BoundingBox> collection, int x, int y, int z) {
+		public void getBoxes(Collection<BoundingBox> collection, BlockView view, BlockState state, int x, int y, int z) {
 			if (when.test(state)) {
-				models.apply((int)Util.hashCode(x, y, z)).getBoxes(collection);
+				models.apply((int)Util.hashCode(x, y, z)).getBoxes(collection, view, state, x, y, z);
 			}
 		}
 		
 		@Override
-		public boolean isFullOpaque(BlockState state, int x, int y, int z) {
+		public boolean isFullOpaque(BlockView view, BlockState state, int x, int y, int z) {
 			return false;
 		}
 		

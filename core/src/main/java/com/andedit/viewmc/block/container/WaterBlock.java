@@ -13,7 +13,7 @@ import com.andedit.viewmc.resource.blockstate.BlockStateJson;
 import com.andedit.viewmc.util.Cull;
 import com.andedit.viewmc.util.Facing;
 import com.andedit.viewmc.util.Identifier;
-import com.andedit.viewmc.world.Section;
+import com.andedit.viewmc.world.BlockView;
 import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.utils.Null;
 import com.badlogic.gdx.utils.OrderedMap;
@@ -56,17 +56,17 @@ public class WaterBlock extends Block {
 	}
 	
 	@Override
-	public void build(Section section, MeshProvider provider, BlockState state, int x, int y, int z) {
-		getModel(section, x, y, z).build(section, provider, state, x, y, z);
+	public void build(MeshProvider provider, BlockView view, BlockState state, int x, int y, int z) {
+		getModel(view, x, y, z).build(provider, view, state, x, y, z);
 	}
 
 	@Override
-	public void getQuads(BlockState state, Collection<Quad> list, int x, int y, int z) {
+	public void getQuads(Collection<Quad> list, BlockView view, BlockState state, int x, int y, int z) {
 		
 	}
 
 	@Override
-	public void getBoxes(BlockState state, Collection<BoundingBox> list, int x, int y, int z) {
+	public void getBoxes(Collection<BoundingBox> list, BlockView view, BlockState state, int x, int y, int z) {
 		
 	}
 	
@@ -80,7 +80,7 @@ public class WaterBlock extends Block {
 	}
 	
 	@Override
-	public boolean isFullOpaque(BlockState state, int blockLight, int x, int y, int z) {
+	public boolean isFullOpaque(BlockView view, BlockState state, int x, int y, int z) {
 		return false;
 	}
 	
@@ -89,7 +89,7 @@ public class WaterBlock extends Block {
 		return true;
 	}
 	
-	protected BlockModel getModel(Section section, int x, int y, int z) {
-		return section.getBlockStateAt(x, y+1, z).isWaterlogged() ? fullModel : haftModel;
+	protected BlockModel getModel(BlockView view, int x, int y, int z) {
+		return view.getBlockstate(x, y+1, z).isWaterlogged() ? fullModel : haftModel;
 	}
 }

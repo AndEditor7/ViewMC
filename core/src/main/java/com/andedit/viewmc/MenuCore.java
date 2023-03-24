@@ -31,7 +31,7 @@ public class MenuCore implements Screen {
 	@Override
 	public void show() {
 		manager.reload();
-		gl.glClearColor(0.10f, 0.15f, 0.2f, 1);
+		gl.glClearColor(20/255f, 25/255f, 35/255f, 1);
 	}
 
 	@Override
@@ -53,7 +53,6 @@ public class MenuCore implements Screen {
 
 	@Override
 	public void render() {
-		gl.glClearColor(20/255f, 25/255f, 35/255f, 1);
 		Util.glClear();
 		
 		if (input.isKeyJustPressed(Keys.F4)) {
