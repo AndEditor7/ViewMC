@@ -1,5 +1,7 @@
 package com.andedit.viewmc.lwjgl3;
 
+import java.lang.management.ManagementFactory;
+
 import com.andedit.viewmc.Main;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
@@ -20,19 +22,20 @@ public class Lwjgl3Launcher {
 
 	@SuppressWarnings("unused")
 	private static Lwjgl3ApplicationConfiguration getDefaultConfiguration() {
-		var config = new Lwjgl3ApplicationConfiguration();
+		var config = new HackedLwjglAppConfig();
 		config.setTitle("ViewMC");
 		config.setOpenGLEmulation(GLEmulation.GL30, 3, 2);
-		//config.enableGLDebugOutput(true, System.err);
+		if (ManagementFactory.getRuntimeMXBean().getInputArguments().toString().contains("-agentlib:jdwp"))
+		config.enableGLDebugOutput(true, System.err);
 		config.disableAudio(true);
 		
 		config.setWindowListener(((DesktopAPI)Main.api).window);
 		
 		var mode = Lwjgl3ApplicationConfiguration.getDisplayMode();
-		config.setForegroundFPS(mode.refreshRate == 60 ? 100 : 60);
 		config.setIdleFPS(30);
-		//config.setForegroundFPS(1000);
-		//config.useVsync(false);
+		
+//		config.setForegroundFPS(800);
+//		config.useVsync(false);
 		
 		// Fullscreen
 		if (false) {
@@ -40,6 +43,8 @@ public class Lwjgl3Launcher {
 		}
 		
 		//config.setWindowIcon("libgdx128.png", "libgdx64.png", "libgdx32.png", "libgdx16.png");
+		
+		HackedLwjglApp.config = config;
 		return config;
 	}
 }

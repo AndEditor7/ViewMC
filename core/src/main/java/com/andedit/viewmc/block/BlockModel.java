@@ -5,8 +5,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.swing.Box;
-
 import com.andedit.viewmc.block.BlockModel.Quad;
 import com.andedit.viewmc.block.TextureAtlas.Sprite;
 import com.andedit.viewmc.graphic.Lighting;
@@ -25,11 +23,12 @@ import com.andedit.viewmc.util.Identifier;
 import com.andedit.viewmc.util.Pair;
 import com.andedit.viewmc.util.TexReg;
 import com.andedit.viewmc.util.Util;
+import com.andedit.viewmc.world.BlockView;
 import com.andedit.viewmc.world.Lights;
+import com.andedit.viewmc.world.Section19;
 import com.andedit.viewmc.world.Section;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
@@ -39,7 +38,7 @@ import com.badlogic.gdx.utils.Null;
 // |       |
 // |       |
 // v4-----v1
-public class BlockModel implements Iterable<Quad> {
+public class BlockModel implements BlockLike, Iterable<Quad> {
 	
 	/** tolerance */
 	private static final float T = 0.001f;
@@ -130,26 +129,30 @@ public class BlockModel implements Iterable<Quad> {
 		return this;
 	}
 	
-	public void build(Section section, MeshProvider provider, BlockState state, int x, int y, int z) {
+	@Override
+	public void build(MeshProvider provider, BlockView view, BlockState state, int x, int y, int z) {
 		provider.lighting.reset();
 		for (int i=0,s=quads.size(); i < s; i++) {
-			quads.get(i).build(section, provider, state, x, y, z);
+			quads.get(i).build(view, provider, state, x, y, z);
 		}
 	}
 	
-	public void getQuads(Collection<Quad> collection) {
+	@Override
+	public void getQuads(Collection<Quad> collection, BlockView view, BlockState state, int x, int y, int z) {
 		for (int i=0,s=quads.size(); i < s; i++) {
 			collection.add(quads.get(i));
 		}
 	}
-	
-	public void getBoxes(Collection<BoundingBox> collection) {
+
+	@Override
+	public void getBoxes(Collection<BoundingBox> collection, BlockView view, BlockState state, int x, int y, int z) {
 		for (int i=0,s=boxes.size(); i < s; i++) {
 			collection.add(boxes.get(i).left);
 		}
 	}
-	
-	public boolean isFullOpaque() {
+
+	@Override
+	public boolean isFullOpaque(BlockView view, BlockState state, int x, int y, int z) {
 		return isFullOpaque;
 	}
 	
@@ -293,19 +296,19 @@ public class BlockModel implements Iterable<Quad> {
 			rotateTex(value.rotation);
 		}
 
-		public void build(Section section, MeshProvider provider, BlockState state, int x, int y, int z) {
+		public void build(BlockView view, MeshProvider provider, BlockState state, int x, int y, int z) {
 			List<Quad> quads = provider.quads;
 			quads.clear();
 			
 			@Null
-			BlockState nState = face == null ? null : section.getBlockStateAt(x+face.xOffset, y+face.yOffset, z+face.zOffset);
+			BlockState nState = face == null ? null : view.getBlockstate(x+face.xOffset, y+face.yOffset, z+face.zOffset);
 			if (borderCollide && culling) {
-				nState.getQuads(quads, x+face.xOffset, y+face.yOffset, z+face.zOffset);
+				nState.getQuads(quads, view, x+face.xOffset, y+face.yOffset, z+face.zOffset);
 			}
 			
 			var cull = canRender(quads);
 			if (state.canRender(nState, this, face, cull, x, y, z)) {
-				render(section, provider, state, x, y, z);
+				render(view, provider, state, x, y, z);
 			}
 		}
 		
@@ -366,10 +369,10 @@ public class BlockModel implements Iterable<Quad> {
 			return areaCoveredAll > 1f-T ? Cull.CULLED_BUT_RENDERBALE : Cull.RENDERABLE;
 		}
 		
-		void render(Section section, MeshProvider provider, BlockState state, int x, int y, int z) {
+		void render(BlockView view, MeshProvider provider, BlockState state, int x, int y, int z) {
 			final float xf = x, yf = y, zf = z;
 			final var builder = provider.getBuilder(layer);
-			builder.setColor(tintIndex == -1 ? Color.WHITE_FLOAT_BITS : BlockColors.getColorFloat(state, section.getWorld(), x, y, z, tintIndex));
+			builder.setColor(tintIndex == -1 ? Color.WHITE_FLOAT_BITS : BlockColors.getColorFloat(state, view, x, y, z, tintIndex));
 			float shadeLight = shade ? Lighting.getShade(face) : 1;
 			
 			// ambient occlusion mode
@@ -382,7 +385,7 @@ public class BlockModel implements Iterable<Quad> {
 				//calc(builder, section, x, y, z, (i%3)-1, (i/3)-1);
 				
 				if (lighting.needCalculation(face)) {
-					lighting.calculate(section, face, x, y, z);
+					lighting.calculate(view, face, x, y, z);
 				}
 				
 				lighting.calculateVert(face, 0, 0,  -1, 0,  0,-1,  -1, -1,  0, 0);
@@ -410,7 +413,7 @@ public class BlockModel implements Iterable<Quad> {
 				int y0 = y + getOffset(Axis.Y);
 				int z0 = z + getOffset(Axis.Z);
 				
-				int light = section.getLightAt(x0, y0, z0);
+				int light = view.getLight(x0, y0, z0);
 				builder.setLight(shadeLight, Lights.toBlockF(light), Lights.toSkyF(light));
 				builder.vert(v1.x+xf, v1.y+yf, v1.z+zf, t1.x, t1.y);
 				builder.vert(v2.x+xf, v2.y+yf, v2.z+zf, t2.x, t2.y);

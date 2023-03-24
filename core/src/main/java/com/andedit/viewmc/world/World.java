@@ -9,9 +9,9 @@ import com.andedit.viewmc.block.container.AirBlock;
 import com.andedit.viewmc.graphic.Camera;
 import com.andedit.viewmc.resource.Resources;
 import com.andedit.viewmc.util.AtomicArray;
-import com.andedit.viewmc.util.FloodFill;
+import com.andedit.viewmc.util.FloodFill2D;
 import com.andedit.viewmc.util.Pair;
-import com.andedit.viewmc.util.PointNode;
+import com.andedit.viewmc.util.PointNode2D;
 import com.andedit.viewmc.util.Progress;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.math.GridPoint2;
@@ -22,7 +22,7 @@ import com.badlogic.gdx.utils.Queue;
 
 import net.querz.nbt.io.NBTUtil;
 
-public class World {
+public class World implements WorldView {
 	
 	public static final int LOAD_CHUNK_OFFSET = 4;
 	public static final int DELETE_CHUNK_OFFSET = 8;
@@ -30,8 +30,6 @@ public class World {
 	public final Resources resources;
 	
 	public final LevelDat level;
-	
-	public boolean isDirty = false;
 	
 	/** World Save Folder */
 	final FileHandle worldFolder;
@@ -52,14 +50,14 @@ public class World {
 	private final Array<ChunkToLoad> pendingChunksToRemove = new Array<ChunkToLoad>();
 	
 	private final ChunkSorter sorter = new ChunkSorter();
-	private final Queue<PointNode> queue = new Queue<>(300);
+	private final Queue<PointNode2D> queue = new Queue<>(300);
 	private final GridPoint2 lastPos = new GridPoint2(Integer.MIN_VALUE, Integer.MIN_VALUE);
 	
 	public void startLoadingChunks(int chunkX, int chunkZ, @Null Progress progress) {
 		sorter.clear();
 		
 		final int size = WorldRenderer.RADIUS_H + LOAD_CHUNK_OFFSET;
-		new FloodFill(queue, size*2, node -> {
+		new FloodFill2D(queue, size*2, node -> {
 			var chunk = new ChunkToLoad(chunkX+node.x(), chunkZ+node.z());
 			
 			if (shouldLoadChunk(chunk)) {
@@ -149,7 +147,6 @@ public class World {
 	
 	private void putChunk(Chunk chunk) {
 		getOrCreateRegion(chunk.worldX>>5, chunk.worldZ>>5).putChunk(chunk);
-		isDirty = true;
 	}
 	
 	private void setChunkToLoad(boolean bool, int chunkX, int chunkZ) {
@@ -172,117 +169,77 @@ public class World {
 	
 	// Chunk Loader end
 	
-	public int getGrassColor(int x, int y, int z) {
-		var biome = getBiome(x, y, z);
-		return resources.getGrassColor(biome.temperature, biome.downfall);
-    }
-	
-	public int getFoliageColor(int x, int y, int z) {
-		var biome = getBiome(x, y, z);
-		return resources.getFoliageColor(biome.temperature, biome.downfall);
-    }
-	
-	/**
-	 * Fetches a block light based on a block location from this world.
-	 * The coordinates represent the location of the block inside of this World.
-	 * @param x The x-coordinate of the block in this World
-	 * @param y The y-coordinate of the block in this World
-	 * @param z The z-coordinate of the block in this World
-	 * @return The block light level.
-	 */
-	public int getBlockLight(int x, int y, int z) {
-		var region = getRegion(x>>9, z>>9);
-		return region == null ? Lights.DEFAULT_BLOCK : region.getBlockLight(x&511, y, z&511);
-	}
-	
-	/**
-	 * Fetches a sky light based on a block location from this world.
-	 * The coordinates represent the location of the block inside of this World.
-	 * @param x The x-coordinate of the block in this World
-	 * @param y The y-coordinate of the block in this World
-	 * @param z The z-coordinate of the block in this World
-	 * @return The sky light level.
-	 */
-	public int getSkyLight(int x, int y, int z) {
-		var region = getRegion(x>>9, z>>9);
-		return region == null ? Lights.DEFAULT_SKY : region.getSkyLight(x&511, y, z&511);
-	}
-	
 	/**
 	 * Fetches a light based on a block location from this world.
 	 * The coordinates represent the location of the block inside of this World.
-	 * @param x The x-coordinate of the block in this World
-	 * @param y The y-coordinate of the block in this World
-	 * @param z The z-coordinate of the block in this World
 	 * @return The light data.
 	 */
-	public int getLight(int x, int y, int z) {
-		var region = getRegion(x>>9, z>>9);
-		return region == null ? Lights.DEFAULT_LIGHT : region.getLight(x&511, y, z&511);
+	@Override
+	public int getLight(int worldX, int worldY, int worldZ) {
+		var region = getRegion(worldX>>9, worldZ>>9);
+		return region == null ? Lights.DEFAULT_LIGHT : region.getLight(worldX&511, worldY, worldZ&511);
 	}
 	
 	/**
 	 * Fetches a block state based on a block location from this world.
 	 * The coordinates represent the location of the block inside of this World.
-	 * @param x The x-coordinate of the block in this World
-	 * @param y The y-coordinate of the block in this World
-	 * @param z The z-coordinate of the block in this World
 	 * @return The block state data of this block.
 	 */
-	public BlockState getBlockState(int x, int y, int z) {
-		var region = getRegion(x>>9, z>>9);
-		return region == null ? AirBlock.INSTANCE.getState() : region.getBlockState(x&511, y, z&511);
+	@Override
+	public BlockState getBlockstate(int worldX, int worldY, int worldZ) {
+		var region = getRegion(worldX>>9, worldZ>>9);
+		return region == null ? AirBlock.INSTANCE.getState() : region.getBlockState(worldX&511, worldY, worldZ&511);
 	}
 	
 	/**
 	 * Fetches a biome based on a block location from this section.
-	 * The coordinates represent the location of the block inside of this Section.
-	 * @param x The x-coordinate of the block in this Section
-	 * @param y The y-coordinate of the block in this Section
-	 * @param z The z-coordinate of the block in this Section
+	 * The coordinates represent the location of the block inside of this World.
 	 * @return The biome.
 	 */
-	public Biome getBiome(int x, int y, int z) {
-		var region = getRegion(x>>9, z>>9);
-		return region == null ? Biomes.VOID : region.getBiome(x&511, y, z&511);
+	@Override
+	public Biome getBiome(int worldX, int worldY, int worldZ) {
+		var region = getRegion(worldX>>9, worldZ>>9);
+		return region == null ? Biomes.VOID : region.getBiome(worldX&511, worldY, worldZ&511);
 	}
 	
 	/**
 	 * Fetches a block state based on a section location from this world.
 	 * The coordinates represent the location of the section inside of this World.
-	 * @param x The x-coordinate of the section in this World
-	 * @param y The y-coordinate of the section in this World 
-	 * @param z The z-coordinate of the section in this World
 	 * @return The block state data of this block.
 	 */
 	@Null
-	public Section getSection(int x, int y, int z) {
-		var region = getRegion(x>>5, z>>5);
-		return region == null ? null : region.getSection(x&31, y, z&31);
+	public Section getSection(int worldX, int worldY, int worldZ) {
+		var region = getRegion(worldX>>5, worldZ>>5);
+		return region == null ? null : region.getSection(worldX&31, worldY, worldZ&31);
 	}
 	
 	@Null
-	public Chunk getChunk(int x, int z) {
-		var region = getRegion(x>>5, z>>5);
-		return region == null ? null : region.getChunk(x&31, z&31);
+	public Chunk getChunk(int worldX, int worldZ) {
+		var region = getRegion(worldX>>5, worldZ>>5);
+		return region == null ? null : region.getChunk(worldX&31, worldZ&31);
 	}
 
 	@Null
-	private Region getRegion(int x, int z) {
+	private Region getRegion(int worldX, int worldZ) {
 		for (int i = 0; i < regions.size(); i++) {
 			var region = regions.get(i);
 			if (region == null) continue;
-			if (region.equals(x, z)) return region;
+			if (region.equals(worldX, worldZ)) return region;
 		}
 		return null;
 	}
 	
-	private Region getOrCreateRegion(int x, int z) {
-		var region = getRegion(x, z);
+	private Region getOrCreateRegion(int worldX, int worldZ) {
+		var region = getRegion(worldX, worldZ);
 		if (region == null) {
-			region = new Region(this, x, z);
+			region = new Region(this, worldX, worldZ);
 			regions.add(region);
 		}
 		return region;
+	}
+
+	@Override
+	public Resources getResources() {
+		return resources;
 	}
 }

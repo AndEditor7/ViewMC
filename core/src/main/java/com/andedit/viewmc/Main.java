@@ -2,6 +2,7 @@ package com.andedit.viewmc;
 
 import static com.badlogic.gdx.Gdx.app;
 import static com.badlogic.gdx.Gdx.gl;
+import static com.badlogic.gdx.Gdx.graphics;
 import static com.badlogic.gdx.Gdx.input;
 
 import java.lang.management.ManagementFactory;
@@ -17,6 +18,7 @@ import com.andedit.viewmc.util.API;
 import com.andedit.viewmc.util.Logger;
 import com.andedit.viewmc.util.Util;
 import com.badlogic.gdx.ApplicationAdapter;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
@@ -28,6 +30,9 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 /** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
 public class Main extends ApplicationAdapter {
 	public static final Main main = new Main();
+	
+	public static final Logger LOGGER = new Logger("Main");
+	
 	public static API api;
 	public static Array<Runnable> postInits = new Array<Runnable>();
 
@@ -46,7 +51,10 @@ public class Main extends ApplicationAdapter {
 	
 	@Override
 	public void create() {
-		app.setLogLevel(ManagementFactory.getRuntimeMXBean().getInputArguments().toString().contains("-agentlib:jdwp")?Logger.DEBUG:Logger.INFO);
+		//app.setLogLevel(ManagementFactory.getRuntimeMXBean().getInputArguments().toString().contains("-agentlib:jdwp")?Logger.DEBUG:Logger.INFO);
+		app.setLogLevel(Logger.DEBUG);
+		
+		LOGGER.debug((Gdx.gl30 != null) + "\n" + graphics.getGLVersion().getDebugVersionString());
 		
 		QuadIndex.init();
 		MeshVert.preInit();
@@ -101,10 +109,6 @@ public class Main extends ApplicationAdapter {
 		newScreen = null;
 
 		stage.clear(); // Always clear UI when switching screen.
-		inputs.clear();
-		setCatched(false);
-		//inputLocks.clear();
-
 		screen.show();
 		inputs.set(screen.getInput());
 		

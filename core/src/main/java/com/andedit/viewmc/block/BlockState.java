@@ -6,8 +6,9 @@ import com.andedit.viewmc.block.BlockModel.Quad;
 import com.andedit.viewmc.graphic.MeshProvider;
 import com.andedit.viewmc.resource.Resources;
 import com.andedit.viewmc.util.Cull;
+import com.andedit.viewmc.util.EmptyMap;
 import com.andedit.viewmc.util.Facing;
-import com.andedit.viewmc.world.Section;
+import com.andedit.viewmc.world.BlockView;
 import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.utils.Null;
 import com.badlogic.gdx.utils.ObjectMap;
@@ -17,14 +18,12 @@ import net.querz.nbt.tag.StringTag;
 
 public class BlockState {
 	
-	private static final ObjectMap<String, String> EMPTY = new ObjectMap<String, String>(0);
-	
 	public final Block block;
 	
 	private final ObjectMap<String, String> props;
 	
 	public BlockState(Block block) {
-		this(block, EMPTY);
+		this(block, EmptyMap.instance());
 	}
 	
 	public BlockState(Block block, ObjectMap<String, String> props) {
@@ -33,10 +32,10 @@ public class BlockState {
 	}
 	
 	public BlockState(Resources resources, CompoundTag state) {
-		this.block = resources.toBlock(state.getString("Name"));
+		this.block = resources.getBlock(state.getString("Name"));
 		
 		var properties = state.getCompoundTag("Properties");
-		props = properties == null ? EMPTY : new ObjectMap<>(24);
+		props = properties == null ? EmptyMap.instance() : new ObjectMap<>(20);
 		if (properties != null) 
 		for (var entry : properties) {
 			var tag = (StringTag)entry.getValue();
@@ -72,20 +71,20 @@ public class BlockState {
 		return props.containsKey(key);
 	}
 	
-	public void build(Section section, MeshProvider builder, int x, int y, int z) {
-		block.build(section, builder, this, x, y, z);
+	public void build(MeshProvider builder, BlockView view, int x, int y, int z) {
+		block.build(builder, view, this, x, y, z);
 	}
 	
-	public void getQuads(Collection<Quad> collection, int x, int y, int z) {
-		block.getQuads(this, collection, x, y, z);
+	public void getQuads(Collection<Quad> collection, BlockView view, int x, int y, int z) {
+		block.getQuads(collection, view, this, x, y, z);
 	}
 	
-	public void getBoxes(Collection<BoundingBox> collection, int x, int y, int z) {
-		block.getBoxes(this, collection, x, y, z);
+	public void getBoxes(Collection<BoundingBox> collection, BlockView view, int x, int y, int z) {
+		block.getBoxes(collection, view, this, x, y, z);
 	}
 	
-	public boolean isFullOpque(int blockLight, int x, int y, int z) {
-		return block.isFullOpaque(this, blockLight, x, y, z);
+	public boolean isFullOpaque(BlockView view, int x, int y, int z) {
+		return block.isFullOpaque(view, this, x, y, z);
 	}
 	
 	public boolean canRender(BlockState secondary, Quad quad, Facing face, Cull cull, int x, int y, int z) {

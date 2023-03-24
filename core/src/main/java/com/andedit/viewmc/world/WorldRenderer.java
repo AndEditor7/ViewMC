@@ -9,7 +9,7 @@ import java.util.concurrent.Future;
 import com.andedit.viewmc.Assets;
 import com.andedit.viewmc.Debugs;
 import com.andedit.viewmc.graphic.Camera;
-import com.andedit.viewmc.graphic.Mesh;
+import com.andedit.viewmc.graphic.ChunkMesh;
 import com.andedit.viewmc.graphic.MeshProvider;
 import com.andedit.viewmc.graphic.QuadIndex;
 import com.andedit.viewmc.graphic.RenderLayer;
@@ -17,7 +17,6 @@ import com.andedit.viewmc.graphic.SkyBox;
 import com.andedit.viewmc.graphic.TexBinder;
 import com.andedit.viewmc.graphic.renderer.Renderers;
 import com.andedit.viewmc.resource.Resources;
-import com.andedit.viewmc.util.FloodFill;
 import com.andedit.viewmc.util.Identifier;
 import com.andedit.viewmc.util.Pair;
 import com.badlogic.gdx.graphics.GL20;
@@ -27,38 +26,37 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.Null;
 import com.badlogic.gdx.utils.ObjectSet;
-import com.badlogic.gdx.utils.OrderedSet;
 
 public class WorldRenderer implements Disposable {
 	
-	public static final int RADIUS_H = 16;
-	public static final float RADIUS_SCL = 0.7f;
-	public static final int RADIUS_V = Math.min((int)(RADIUS_H*RADIUS_SCL), 12);
-	public static final int BUILDERS = 20;
+	public static final int RADIUS_H = 12 + 1;
+	public static final float RADIUS_SCL = 0.8f;
+	public static final int RADIUS_V = (int)(RADIUS_H*RADIUS_SCL);
+	public static final int BUILDERS = 20; // 20
 	
 	static final int DELETE_MESH_OFFSET = 3;
 	
-	private final Array<Mesh> meshes = new Array<>(false, 500);
-	private final Array<Mesh> transToRender = new Array<>(false, 500);
-	private final Array<Mesh> soildToRender = new Array<>(false, 500);
-	private final OrderedSet<Identifier> textureToAnimate = new OrderedSet<>(200);
+	private final Array<ChunkMesh> meshes = new Array<>(false, 500);
+	private final Array<ChunkMesh> transToRender = new Array<>(false, 500);
+	private final Array<ChunkMesh> soildToRender = new Array<>(false, 500);
+	private final Array<Identifier> textureToAnimate = new Array<>(200);
 	private final GridPoint3 chunkPos = new GridPoint3();
 	private final Renderers renderers;
 	private final Resources resources;
 	private World world;
 	
-	private final Array<MeshProvider> providers;
+	private CaveCullingTest culling;
+	
+	final Array<MeshProvider> providers;
 	private final Array<Pair<Future<Void>, MeshLoaderTask>> futures;
-	private final ObjectSet<MeshToLoad> pendingMeshes = new ObjectSet<>();
-	private final GridPoint3 lastPos = new GridPoint3(Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE);
-	private final Array<ChunkToLoad> chunkArray = new Array<>(500);
-	private final Array<MeshToLoad> meshArray = new Array<>(2000);
+	final ObjectSet<MeshToLoad> pendingMeshes = new ObjectSet<>();
 	
 	public WorldRenderer(Renderers renderers, Resources blocks) {
 		this.renderers = renderers;
 		this.resources = blocks;
 		this.providers = new Array<>(false, BUILDERS);
 		this.futures = new Array<>(false, BUILDERS);
+		
 		for (int i = 0; i < BUILDERS; i++) {
 			providers.add(new MeshProvider(blocks));
 		}
@@ -66,21 +64,26 @@ public class WorldRenderer implements Disposable {
 	
 	public void setWorld(World world) {
 		this.world = world;
+		culling = new CaveCullingTest(this, world);
 	}
 	
 	public void render(Camera camera) {
 		final var camPos = camera.position;
 		chunkPos.set(camPos.floorX()>>4, camPos.floorY()>>4, camPos.floorZ()>>4);
+		camera.far = RADIUS_H * 20;
 		
 		if (Debugs.isKeyJustPressed(Debugs.F4)) {
 			clearMeshes();
 		}
 		
+		culling.update(camera);
+		
 		// somthing new
-		scanForChunks();
-		scanForMeshs(camera);
+		//scanForChunks();
+		//scanForMeshs(camera);
 		updateMeshes();
 		
+		int num = 0;
 		transToRender.clear();
 		soildToRender.clear();
 		for (int i = 0; i < meshes.size; i++) {
@@ -92,13 +95,17 @@ public class WorldRenderer implements Disposable {
 				continue;
 			}
 			
-			if (!mesh.pass(chunkPos, 0) && mesh.isVisible(camera)) {
-				soildToRender.add(mesh);
+			if (!mesh.pass(chunkPos, 0) && culling.canRender(mesh.x, mesh.y, mesh.z)) {
+				num++;
+				if (!mesh.isEmpty(RenderLayer.SOILD)) {
+					soildToRender.add(mesh);
+				}
 				if (!mesh.isEmpty(RenderLayer.TRANS)) {
 					transToRender.add(mesh);
 				}
 			}
 		}
+		//System.out.println(num);
 
 		if (transToRender.notEmpty()) {
 			var gridA = new GridPoint3();
@@ -125,6 +132,18 @@ public class WorldRenderer implements Disposable {
 		resources.bindTexture();
 		QuadIndex.preBind();
 		
+//		camera.fieldOfView = 100;
+//		camera.update(false);
+		
+		textureToAnimate.clear();
+		for (var mesh : soildToRender) {
+			mesh.getTextures(RenderLayer.SOILD, textureToAnimate);
+		}
+		for (var mesh : transToRender) {
+			mesh.getTextures(RenderLayer.TRANS, textureToAnimate);
+		}
+		resources.update(textureToAnimate);
+		
 		shader.bind();
 		shader.setUniformMatrix("u_projTrans", camera.combined);
 		shader.setUniformf("u_camPos", (float)camPos.x, (float)camPos.y, (float)camPos.z);
@@ -135,14 +154,7 @@ public class WorldRenderer implements Disposable {
 		shader.setUniformi("u_texture", resources.getTextureUnit());
 		shader.setUniformi("u_lightMap", Assets.lightMapBind.unit);
 		
-		textureToAnimate.clear();
-		for (var mesh : soildToRender) {
-			mesh.getTextures(RenderLayer.SOILD, textureToAnimate);
-		}
-		for (var mesh : transToRender) {
-			mesh.getTextures(RenderLayer.TRANS, textureToAnimate);
-		}
-		resources.update(textureToAnimate);
+//		camera.fieldOfView = 70;
 		
 		renderer.enable(RenderLayer.SOILD);
 		for (int i = 0; i < soildToRender.size; i++) {
@@ -160,50 +172,6 @@ public class WorldRenderer implements Disposable {
 		
 		gl.glDisable(GL20.GL_CULL_FACE);
 		TexBinder.deactive();
-		world.isDirty = false;
-	}
-	
-	private void scanForChunks() {
-		if (world.isDirty || lastPos.x != chunkPos.x || lastPos.z != chunkPos.z) {
-			chunkArray.size = 0;
-			new FloodFill(RADIUS_H*2, node -> {
-				chunkArray.add(new ChunkToLoad(chunkPos.x+node.x(), chunkPos.z+node.z()));
-			}).run();
-		}
-	}
-	
-	private void scanForMeshs(Camera camera) {
-		
-		if (world.isDirty || !lastPos.equals(chunkPos)) {
-			lastPos.set(chunkPos);
-			meshArray.clear();
-			//System.out.println("Scan for mesh!");
-			for (var chunkToLoad : chunkArray) {
-				var chunk = world.getChunk(chunkToLoad.worldX, chunkToLoad.worldZ);
-				if (chunk == null || !chunk.canBuild()) continue;
-				for (int y = chunkPos.y+RADIUS_V; y >= chunkPos.y-RADIUS_V; y--) {
-					var section = chunk.getSection(y);
-					if (section == null) continue;
-					if (section.isDirty) {
-						meshArray.add(new MeshToLoad(section, chunkToLoad.worldX, y, chunkToLoad.worldZ));
-					}
-				}
-			}
-		}
-		
-		
-		for (int i = 0; providers.notEmpty() && i < meshArray.size; i++) {
-			var meshToLoad = meshArray.get(i);
-			if (!meshToLoad.isVisible(camera)) continue;
-			
-			if (!pendingMeshes.contains(meshToLoad)) {
-				pendingMeshes.add(meshToLoad);
-				submit(new MeshLoaderTask(providers.pop(), meshToLoad));
-				meshArray.removeIndex(i--);
-			}
-			
-			meshToLoad.section.isDirty = false;
-		}
 	}
 	
 	private void updateMeshes() {
@@ -217,12 +185,11 @@ public class WorldRenderer implements Disposable {
 					future.get();
 					var mesh = getMesh(task.mesh.chunkX, task.mesh.chunkY, task.mesh.chunkZ);
 					if (mesh == null) {
-						mesh = new Mesh(this, task.mesh);
+						mesh = new ChunkMesh(this, task.mesh);
 						meshes.add(mesh);
 					}
 					synchronized (task.provider) {
-						mesh.update(task.provider);
-						
+						mesh.build(task.provider);
 					}
 				} catch (Exception e) {
 					System.err.println("Error chunk mesh at " + task.mesh);
@@ -238,12 +205,13 @@ public class WorldRenderer implements Disposable {
 		//if (built > 10) System.out.println("built: " + built);
 	}
 	
-	void submit(MeshLoaderTask task) {
+	void submit(MeshToLoad meshToLoad) {
+		var task = new MeshLoaderTask(providers.pop(), meshToLoad);
 		futures.add(new Pair<>(meshExe.submit(task), task));
 	}
 	
 	@Null
-	Mesh getMesh(int x, int y, int z) {
+	ChunkMesh getMesh(int x, int y, int z) {
 		for (var mesh : meshes) {
 			if (mesh.equals(x, y, z)) {
 				return mesh;
@@ -265,8 +233,7 @@ public class WorldRenderer implements Disposable {
 	}
 	
 	public void clearMeshes() {
-		world.isDirty = true;
-		meshes.forEach(Mesh::dispose);
+		meshes.forEach(ChunkMesh::dispose);
 		meshes.clear();
 		
 		for (var pair : futures) {
@@ -280,6 +247,6 @@ public class WorldRenderer implements Disposable {
 
 	@Override
 	public void dispose() {
-		meshes.forEach(Mesh::dispose);
+		meshes.forEach(ChunkMesh::dispose);
 	}
 }

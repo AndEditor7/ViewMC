@@ -1,7 +1,9 @@
 package com.andedit.viewmc.graphic.renderer;
 
 import static com.badlogic.gdx.Gdx.gl;
+import static com.badlogic.gdx.Gdx.input;
 
+import com.andedit.viewmc.Main;
 import com.andedit.viewmc.graphic.RenderLayer;
 import com.andedit.viewmc.util.Util;
 import com.badlogic.gdx.graphics.GL20;
@@ -18,6 +20,7 @@ public class MinecraftRenderer extends Renderer {
 			gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
 			gl.glEnable(GL20.GL_BLEND);
 		}
+//		Main.api.glPolygonMode(GL20.GL_FRONT_AND_BACK, false);
 	}
 
 	@Override
@@ -25,6 +28,7 @@ public class MinecraftRenderer extends Renderer {
 		if (layer == RenderLayer.TRANS) {
 			gl.glDisable(GL20.GL_BLEND);
 		}
+//		Main.api.glPolygonMode(GL20.GL_FRONT_AND_BACK, true);
 	}
 	
 	@Override

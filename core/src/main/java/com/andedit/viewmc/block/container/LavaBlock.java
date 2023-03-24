@@ -1,11 +1,11 @@
 package com.andedit.viewmc.block.container;
 
 import com.andedit.viewmc.block.BlockModel;
-import com.andedit.viewmc.block.BlockState;
 import com.andedit.viewmc.block.BlockModel.Quad;
+import com.andedit.viewmc.block.BlockState;
 import com.andedit.viewmc.util.Cull;
 import com.andedit.viewmc.util.Facing;
-import com.andedit.viewmc.world.Section;
+import com.andedit.viewmc.world.BlockView;
 
 public class LavaBlock extends WaterBlock {
 	
@@ -40,7 +40,7 @@ public class LavaBlock extends WaterBlock {
 	}
 	
 	@Override
-	protected BlockModel getModel(Section section, int x, int y, int z) {
-		return section.getBlockStateAt(x, y+1, z).isOf(this) ? fullModel : haftModel;
+	protected BlockModel getModel(BlockView view, int x, int y, int z) {
+		return view.getBlockstate(x, y+1, z).isOf(this) ? fullModel : haftModel;
 	}
 }

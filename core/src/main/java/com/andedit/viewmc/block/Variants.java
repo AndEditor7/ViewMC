@@ -11,10 +11,10 @@ import com.andedit.viewmc.resource.blockstate.BlockStateJson;
 import com.andedit.viewmc.resource.blockstate.VariantJson;
 import com.andedit.viewmc.util.ModelSupplier;
 import com.andedit.viewmc.util.Util;
-import com.andedit.viewmc.world.Section;
+import com.andedit.viewmc.world.BlockView;
 import com.badlogic.gdx.math.collision.BoundingBox;
 
-public class Variants implements Renderable {
+public class Variants implements BlockLike {
 	
 	public final List<Variant> variants;
 	
@@ -27,50 +27,50 @@ public class Variants implements Renderable {
 	}
 
 	@Override
-	public void build(Section section, MeshProvider provider, BlockState state, int x, int y, int z) {
+	public void build(MeshProvider provider, BlockView view, BlockState state, int x, int y, int z) {
 		for (int i = 0; i < variants.size(); i++) {
 			var variant = variants.get(i);
 			if (variant.test(state)) {
-				variant.build(section, provider, state, x, y, z);
+				variant.build(provider, view, state, x, y, z);
 				return;
 			}
 		}
 	}
 
 	@Override
-	public void getQuads(BlockState state, Collection<Quad> collection, int x, int y, int z) {
+	public void getQuads(Collection<Quad> collection, BlockView view, BlockState state, int x, int y, int z) {
 		for (int i = 0; i < variants.size(); i++) {
 			var variant = variants.get(i);
 			if (variant.test(state)) {
-				variant.getQuads(state, collection, x, y, z);
+				variant.getQuads(collection, view, state, x, y, z);
 				return;
 			}
 		}
 	}
 
 	@Override
-	public void getBoxes(BlockState state, Collection<BoundingBox> collection, int x, int y, int z) {
+	public void getBoxes(Collection<BoundingBox> collection, BlockView view, BlockState state, int x, int y, int z) {
 		for (int i = 0; i < variants.size(); i++) {
 			var variant = variants.get(i);
 			if (variant.test(state)) {
-				variant.getBoxes(state, collection, x, y, z);
+				variant.getBoxes(collection, view, state, x, y, z);
 				return;
 			}
 		}
 	}
 	
 	@Override
-	public boolean isFullOpaque(BlockState state, int x, int y, int z) {
+	public boolean isFullOpaque(BlockView view, BlockState state, int x, int y, int z) {
 		for (int i = 0; i < variants.size(); i++) {
 			var variant = variants.get(i);
 			if (variant.test(state)) {
-				return variant.isFullOpaque(state, x, y, z);
+				return variant.isFullOpaque(view, state, x, y, z);
 			}
 		}
 		return false;
 	}
 	
-	private static class Variant implements Predicate<BlockState>, Renderable {
+	private static class Variant implements Predicate<BlockState>, BlockLike {
 		final ArrayList<Predicate<BlockState>> cases = new ArrayList<>();
 		final Weighted<BlockModel> models = new Weighted<BlockModel>();
 		
@@ -90,23 +90,23 @@ public class Variants implements Renderable {
 		}
 		
 		@Override
-		public void build(Section section, MeshProvider provider, BlockState state, int x, int y, int z) {
-			models.apply((int)Util.hashCode(x, y, z)).build(section, provider, state, x, y, z);
+		public void build(MeshProvider provider, BlockView view, BlockState state, int x, int y, int z) {
+			models.apply((int)Util.hashCode(x, y, z)).build(provider, view, state, x, y, z);
 		}
 
 		@Override
-		public void getQuads(BlockState state, Collection<Quad> collection, int x, int y, int z) {
-			models.apply((int)Util.hashCode(x, y, z)).getQuads(collection);
+		public void getQuads(Collection<Quad> collection, BlockView view, BlockState state, int x, int y, int z) {
+			models.apply((int)Util.hashCode(x, y, z)).getQuads(collection, view, state, x, y, z);
 		}
 
 		@Override
-		public void getBoxes(BlockState state, Collection<BoundingBox> collection, int x, int y, int z) {
-			models.apply((int)Util.hashCode(x, y, z)).getBoxes(collection);
+		public void getBoxes(Collection<BoundingBox> collection, BlockView view, BlockState state, int x, int y, int z) {
+			models.apply((int)Util.hashCode(x, y, z)).getBoxes(collection, view, state, x, y, z);
 		}
 		
 		@Override
-		public boolean isFullOpaque(BlockState state, int x, int y, int z) {
-			return models.apply((int)Util.hashCode(x, y, z)).isFullOpaque();
+		public boolean isFullOpaque(BlockView view, BlockState state, int x, int y, int z) {
+			return models.apply((int)Util.hashCode(x, y, z)).isFullOpaque(view, state, x, y, z);
 		}
 
 		@Override

@@ -10,6 +10,7 @@ import com.andedit.viewmc.util.Cull;
 import com.andedit.viewmc.util.Facing;
 import com.andedit.viewmc.util.Identifier;
 import com.andedit.viewmc.util.ModelSupplier;
+import com.andedit.viewmc.world.BlockView;
 import com.badlogic.gdx.utils.OrderedMap;
 
 public class LeavesBlock extends Block {
@@ -32,7 +33,7 @@ public class LeavesBlock extends Block {
 	}
 	
 	@Override
-	public boolean isFullOpaque(BlockState state, int blockLight, int x, int y, int z) {
+	public boolean isFullOpaque(BlockView view, BlockState state, int x, int y, int z) {
 		return true;
 	}
 	

@@ -22,10 +22,6 @@ public final class Identifier {
 		full = name + ':' + path;
 	}
 	
-	public Identifier subfix(String string) {
-		return new Identifier(name, path.concat(string));
-	}
-	
 	@Override
 	public int hashCode() {
 		return full.hashCode();

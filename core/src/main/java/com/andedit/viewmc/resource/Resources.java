@@ -14,13 +14,13 @@ import com.andedit.viewmc.resource.blockstate.BlockStateJson;
 import com.andedit.viewmc.util.Identifier;
 import com.andedit.viewmc.util.Progress;
 import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.ObjectMap;
 import com.badlogic.gdx.utils.OrderedMap;
-import com.badlogic.gdx.utils.OrderedSet;
 
 /** Contains block models and textures. */
-public class Resources implements Disposable {
+public class Resources implements DataResources, Disposable {
 	
 	private final TextureAtlas textures;
 	private final int[][] grassColors, foliageColors;
@@ -41,7 +41,6 @@ public class Resources implements Disposable {
 		pixmap = new Pixmap(bytes, 0, bytes.length);
 		foliageColors = toIntArray(pixmap);
 		pixmap.dispose();
-		
 		
 		final var map = customBlocks;
 		map.put("oak_leaves", new LeavesBlock());
@@ -93,7 +92,8 @@ public class Resources implements Disposable {
 		return block;
 	}
 	
-	public Block toBlock(String id) {
+	@Override
+	public Block getBlock(String id) {
 		var block = idToBlock.get(id);
 		return block == null ? AirBlock.INSTANCE : block;
 	}
@@ -102,6 +102,7 @@ public class Resources implements Disposable {
 		return water;
 	}
 	
+	@Override
 	public int getGrassColor(float temperature, float humidity) {
         int y = (int)((1f - (humidity * temperature)) * 255f);
         int x = (int)((1f - temperature) * 255f);
@@ -111,6 +112,7 @@ public class Resources implements Disposable {
         return 0xFFFFFFFF;
     }
 	
+	@Override
 	public int getFoliageColor(float temperature, float humidity) {
         int y = (int)((1f - (humidity * temperature)) * 255f);
         int x = (int)((1f - temperature) * 255f);
@@ -133,7 +135,7 @@ public class Resources implements Disposable {
 	}
 	
 	/** Only update if the texture is binded. */
-	public void update(OrderedSet<Identifier> textureToAnimate) {
+	public void update(Array<Identifier> textureToAnimate) {
 		textures.update(textureToAnimate);
 	}
 

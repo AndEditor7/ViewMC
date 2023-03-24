@@ -32,10 +32,12 @@ public class Logger {
 	}
 
 	public void info(Object message, Throwable throwable) {
-		var string = String.valueOf(message);
 		if (app.getLogLevel() >= DEBUG) {
-			app.error(tag, string, throwable);
-		} else app.log(tag, string);
+			app.error(tag, String.valueOf(message), throwable);
+		} else {
+			var string = throwable.getMessage();
+			app.log(tag, message + (string.indexOf('\n') == -1 ? " - " + string : ""));
+		}
 	}
 
 	public void error(Object message) {

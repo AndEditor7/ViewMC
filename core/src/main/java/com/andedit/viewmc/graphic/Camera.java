@@ -143,7 +143,19 @@ public final class Camera extends PerspectiveCamera
 		position.toVecF(posF);
 	}
 	
-	private void updateRotation() {
+	@Override
+	public void lookAt(float x, float y, float z) {
+		lookAt((double)x, (double)y, (double)z);
+	}
+	
+	public void lookAt(double x, double y, double z) {
+		var dir = new Vector3d(x-position.x, y-position.y, z-position.z).nor();
+		pitch = MathUtils.asin((float)dir.y) * MathUtils.radiansToDegrees;
+		yaw = MathUtils.atan2((float)dir.x, (float)dir.z) * MathUtils.radiansToDegrees;
+		updateRotation();
+	}
+	
+	public void updateRotation() {
 		pitch = MathUtils.clamp(pitch, -90f, 90f);
 		yaw = Util.modAngle(yaw);
 		

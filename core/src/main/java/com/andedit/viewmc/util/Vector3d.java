@@ -5,6 +5,13 @@ import com.badlogic.gdx.math.Vector3;
 
 public class Vector3d {
 	public double x, y, z;
+	
+	public Vector3d() {
+	}
+	
+	public Vector3d(double x, double y, double z) {
+		set(x, y, z);
+	}
 
 	public void set(double x, double y, double z) {
 		this.x = x;
@@ -52,5 +59,24 @@ public class Vector3d {
 		return (float)(f - z);
 	}
 
+	public Vector3d nor() {
+		final var len2 = len2();
+		if (len2 == 0f || len2 == 1f) return this;
+		return div(Math.sqrt(len2));
+	}
 	
+	private Vector3d div(double val) {
+		x /= val;
+		y /= val;
+		z /= val;
+		return this;
+	}
+
+	public double len() {
+		return Math.sqrt(len2());
+	}
+
+	public double len2() {
+		return x * x + y * y + z * z;
+	}
 }

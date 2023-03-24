@@ -22,8 +22,6 @@ import com.badlogic.gdx.utils.OrderedSet;
 /** pos,uv,col,dat */
 public class MeshBuilder implements VertConsumer {
 	
-	public final Resources resources;
-	
 	private final FloatArray array = new FloatArray(512);
 	final OrderedSet<Identifier> textureToAnimate = new OrderedSet<>(200);
 	
@@ -35,10 +33,6 @@ public class MeshBuilder implements VertConsumer {
 	protected float uScale = 1, vScale = 1;
 	
 	protected TexReg region = TexReg.FULL;
-	
-	public MeshBuilder(Resources resources) {
-		this.resources = resources;
-	}
 	
 	/** Add texture to animate */
 	public void addTexture(@Null Identifier id) {
