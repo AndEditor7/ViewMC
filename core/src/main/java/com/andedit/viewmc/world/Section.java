@@ -132,7 +132,7 @@ public abstract class Section implements BlockRenderView {
 		return (int)bitRange(data[longIndex], startBit, startBit + bits);
 	}
 	
-	protected int getBlockIndex(int x, int y, int z) {
+	protected int getVoxelIndex(int x, int y, int z) {
 		return y << 8 | z << 4 | x;
 	}
 	

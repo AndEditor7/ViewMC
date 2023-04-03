@@ -93,21 +93,21 @@ public class Section19 extends Section {
 	@Override
 	public int getBlockLightAt(int x, int y, int z) {
 		if (blockLight.length == 0) return Lights.DEFAULT_BLOCK;
-		final int index = getBlockIndex(x, y, z);
+		final int index = getVoxelIndex(x, y, z);
         return blockLight[index >> 1] >> 4 * (index & 1) & 0xF;
 	}
 	
 	@Override
 	public int getSkyLightAt(int x, int y, int z) {
 		if (skyLight.length == 0) return Lights.DEFAULT_SKY;
-		final int index = getBlockIndex(x, y, z);
+		final int index = getVoxelIndex(x, y, z);
         return skyLight[index >> 1] >> 4 * (index & 1) & 0xF;
 	}
 	
 	@Override
 	public BlockState getBlockstateAt(int x, int y, int z) {
 		if (blockPalette == null) return AirBlock.INSTANCE.getState(); 
-		return blockPalette[getPaletteIndex(getBlockIndex(x, y, z), blockBits, blockStates)];
+		return blockPalette[getPaletteIndex(getVoxelIndex(x, y, z), blockBits, blockStates)];
 	}
 	
 	@Override

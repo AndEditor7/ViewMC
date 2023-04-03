@@ -123,7 +123,7 @@ class CaveCullingGraph {
 	}
 	
 	private int getVoxelIndex(int x, int y, int z) {
-		return section.getBlockIndex(x, y, z);
+		return section.getVoxelIndex(x, y, z);
 	}
 	
 	static boolean getGraph(int bits, int x, int y, int z) {

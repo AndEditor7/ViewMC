@@ -16,5 +16,4 @@ public interface BlockRenderView extends BlockView {
 		var biome = getBiome(x, y, z);
 		return getResources().getFoliageColor(biome.temperature, biome.downfall);
     }
-	
 }

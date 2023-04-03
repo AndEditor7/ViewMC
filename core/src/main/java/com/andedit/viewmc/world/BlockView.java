@@ -2,6 +2,7 @@ package com.andedit.viewmc.world;
 
 import com.andedit.viewmc.biome.Biome;
 import com.andedit.viewmc.block.BlockState;
+import com.badlogic.gdx.utils.Null;
 
 /** Represents a scoped, read-only view of blockstates, biomes and lights. */
 public interface BlockView {
