@@ -6,13 +6,15 @@ import com.badlogic.gdx.utils.Null;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
 public final class UIManager {
-	public final InputHolder input;
+	public final InputHolder inputBefore;
+	public final InputHolder inputAfter;
 	
 	@Null UI current;
 	final StageUI stage;
 
 	public UIManager(StageUI stage) {
-		this.input = new InputHolder();
+		this.inputBefore = new InputHolder();
+		this.inputAfter = new InputHolder();
 		this.stage = stage;
 	}
 	
@@ -32,7 +34,8 @@ public final class UIManager {
 		current = ui;
 		stage.clear();
 		if (ui != null) {
-			input.set(ui.getInput());
+			inputBefore.set(ui.getInputAfter());
+			inputAfter.set(ui.getInputAfter());
 			if (update) reload();
 		}
 	}

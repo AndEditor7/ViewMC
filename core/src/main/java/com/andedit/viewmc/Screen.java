@@ -18,7 +18,12 @@ public interface Screen extends Disposable, Event {
 	void event(Events event, Object arg);
 	
 	@Null
-	default InputProcessor getInput() {
+	default InputProcessor getInputAfter() {
+		return null;
+	}
+	
+	@Null
+	default InputProcessor getInputBefore() {
 		return null;
 	}
 	

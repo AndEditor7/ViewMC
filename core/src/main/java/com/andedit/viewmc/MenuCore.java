@@ -64,8 +64,8 @@ public class MenuCore implements Screen {
 	}
 	
 	@Override
-	public InputProcessor getInput() {
-		return new InputMultiplexer(manager.input, input);
+	public InputProcessor getInputAfter() {
+		return new InputMultiplexer(manager.inputAfter, input);
 	}
 
 	@Override

@@ -12,10 +12,6 @@ public class ProgressBar extends Widget {
 	private float progress;
 	private final BitmapFontCache text = Assets.font();
 	
-	public ProgressBar() {
-		setSize(getPrefWidth(), getPrefHeight());
-	}
-	
 	public void setProgress(float progress) {
 		this.progress = progress;
 		text.setText(Integer.toString(Math.round(100f*progress)) + '%', 0, 0, 0, Align.center, false);
@@ -40,13 +36,8 @@ public class ProgressBar extends Widget {
 	}
 	
 	@Override
-	public float getMinWidth() {
-		return 50;
-	}
-	
-	@Override
 	public float getPrefWidth() {
-		return 250;
+		return 32;
 	}
 
 	@Override

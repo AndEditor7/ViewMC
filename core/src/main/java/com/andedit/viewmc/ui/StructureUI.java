@@ -3,6 +3,7 @@ package com.andedit.viewmc.ui;
 import static com.andedit.viewmc.Main.main;
 
 import com.andedit.viewmc.Assets;
+import com.andedit.viewmc.MakerCore;
 import com.andedit.viewmc.MenuCore;
 import com.andedit.viewmc.ViewCore;
 import com.andedit.viewmc.ui.drawable.TexRegDrawable;
@@ -21,6 +22,7 @@ public class StructureUI extends BaseUI {
 	private final ViewCore core;
 	private final Table root = new Table();
 	private final Table box;
+	private final TextButton gifButton;
 	
 	public StructureUI(ViewCore core) {
 		this.core = core;
@@ -36,18 +38,26 @@ public class StructureUI extends BaseUI {
 		
 		root.setUserObject(new Vector2(0, 1));
 		root.align(Align.topLeft);
-		root.add(box).grow().pad(20).padBottom(10).row();
+		root.add(box).grow().pad(20).padBottom(10).colspan(2).row();
 		
 		var button = new TextButton("Close", Assets.skin);
-		root.add(button).prefSize(70, 16).padBottom(5);
+		root.add(button).right().prefSize(70, 16).padBottom(5).padRight(10);
 		button.addListener(Util.newListener(() -> {
 			main.setScreen(new MenuCore());
+		}));
+		
+		gifButton = new TextButton("Make GIF", Assets.skin);
+		gifButton.setDisabled(true);
+		root.add(gifButton).left().prefSize(70, 16).padBottom(5).padLeft(10);
+		gifButton.addListener(Util.newListener(() -> {
+			main.setScreen(new MakerCore(core.resources, core.renderer.getStructure()));
 		}));
 	}
 	
 	@Override
 	public void update() {
 		box.setVisible(!core.renderer.hasStructure());
+		gifButton.setDisabled(!core.renderer.hasStructure());
 	}
 	
 	@Override

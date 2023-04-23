@@ -96,8 +96,8 @@ public class GameCore implements Screen {
 	}
 	
 	@Override
-	public InputProcessor getInput() {
-		return new InputMultiplexer(manager.input, inputHolder);
+	public InputProcessor getInputAfter() {
+		return new InputMultiplexer(manager.inputAfter, inputHolder);
 	}
 
 	@Override

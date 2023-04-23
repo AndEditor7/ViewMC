@@ -63,6 +63,10 @@ public class FastBatch implements Batch {
 	 * shader.
 	 */
 	public FastBatch() {
+		this(1000);
+	}
+	
+	public FastBatch(int sprites) {
 		final VertexAttributes attributes = new VertexAttributes(
 				new VertexAttribute(Usage.Position, 2, ShaderProgram.POSITION_ATTRIBUTE),
 				new VertexAttribute(Usage.ColorPacked, 4, ShaderProgram.COLOR_ATTRIBUTE),
@@ -70,7 +74,7 @@ public class FastBatch implements Batch {
 		shader = SpriteBatch.createDefaultShader();
 		vertex = Vertex.newVa(attributes, VertBuf.buffer);
 		projectionMatrix.setToOrtho2D(0, 0, Util.getW(), Util.getH());
-		vertices = new float[1000 * SPRITE_SIZE];
+		vertices = new float[sprites * SPRITE_SIZE];
 	}
 
 	@Override

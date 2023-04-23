@@ -8,17 +8,19 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class Statics {
 	
-	public static ExecutorService chunkExe, meshExe;
+	public static ExecutorService chunkExe, meshExe, theadExe;
 	
 	static void init() {
 		chunkExe = Executors.newFixedThreadPool(2, new DaemonThreadFactory("Chunk Loader"));
 //		meshExe = Executors.newFixedThreadPool(2, new DaemonThreadFactory("Mesh Builder"));
 		meshExe = Executors.newSingleThreadExecutor(new DaemonThreadFactory("Mesh Builder"));
+		theadExe = Executors.newSingleThreadExecutor(new DaemonThreadFactory("Thead"));
 	}
 	
 	static void dispose() {
 		shutdown(chunkExe);
 		shutdown(meshExe);
+		shutdown(theadExe);
 	}
 	
 	private static void shutdown(ExecutorService service) {

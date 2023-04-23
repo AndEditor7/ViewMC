@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import com.andedit.viewmc.graphic.vertex.Vertex;
-import com.andedit.viewmc.resource.Resources;
 import com.andedit.viewmc.util.Identifier;
 import com.andedit.viewmc.util.TexReg;
 import com.badlogic.gdx.graphics.Color;
@@ -53,8 +52,8 @@ public class MeshBuilder implements VertConsumer {
 		vScale = v2 - v1;
 	}
 	
-	public void setLight(float ambientLight, float blockLight, float skyLight) {
-		dat = toData(ambientLight, blockLight, skyLight);
+	public void setLight(float shadeLight, float ambientLight, float blockLight, float skyLight) {
+		dat = toData(shadeLight, ambientLight, blockLight, skyLight);
 	}
 	
 	public void setColor(int color) {
@@ -133,8 +132,8 @@ public class MeshBuilder implements VertConsumer {
 		array.add(Color.toFloatBits(r, g, b, a));
 	}
 	
-	public void lit(float ambientLight, float blockLight, float skyLight) {
-		array.add(toData(ambientLight, blockLight, skyLight));
+	public void lit(float shadeLight, float ambientLight, float blockLight, float skyLight) {
+		array.add(toData(shadeLight, ambientLight, blockLight, skyLight));
 	}
 
 	@Override
@@ -181,7 +180,7 @@ public class MeshBuilder implements VertConsumer {
 		textureToAnimate.clear();
 	}
 	
-	public static float toData(float ambientLight, float blockLight, float skyLight) {
-		return Color.toFloatBits(ambientLight, blockLight, skyLight, 0);
+	protected float toData(float shadeLight, float ambientLight, float blockLight, float skyLight) {
+		return Color.toFloatBits(shadeLight * ambientLight, blockLight, skyLight, 0);
 	}
 }

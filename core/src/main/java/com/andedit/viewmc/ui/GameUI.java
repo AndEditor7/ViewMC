@@ -43,7 +43,7 @@ public class GameUI extends BaseUI {
 	}
 	
 	@Override
-	public InputProcessor getInput() {
+	public InputProcessor getInputAfter() {
 		return input;
 	}
 }

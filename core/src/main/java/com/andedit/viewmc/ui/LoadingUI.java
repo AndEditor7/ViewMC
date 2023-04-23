@@ -92,6 +92,7 @@ public class LoadingUI<T> extends BaseUI {
 		var group = add(new Group());
 		group.setUserObject(new Vector2(0.5f, 0.5f));
 		
+		bar.setSize(250, 16);
 		bar.setPosition(0, -20, Align.center);
 		group.addActor(bar);
 		
@@ -100,6 +101,7 @@ public class LoadingUI<T> extends BaseUI {
 		group.addActor(status);
 		
 		var icon = new LoadingIcon();
+		icon.setSize(32, 32);
 		icon.setPosition(0, 25, Align.bottom);
 		group.addActor(icon);
 	}
@@ -128,7 +130,7 @@ public class LoadingUI<T> extends BaseUI {
 	
 	@Override
 	public void resize(Viewport view) {
-		bar.setWidth(Math.min(bar.getPrefWidth(), view.getWorldWidth()-20));
+		bar.setWidth(Math.min(250, view.getWorldWidth()-20));
 		bar.setPosition(0, -20, Align.center);
 		
 		if (actor != null) {

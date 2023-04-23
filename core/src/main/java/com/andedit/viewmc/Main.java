@@ -2,10 +2,7 @@ package com.andedit.viewmc;
 
 import static com.badlogic.gdx.Gdx.app;
 import static com.badlogic.gdx.Gdx.gl;
-import static com.badlogic.gdx.Gdx.graphics;
 import static com.badlogic.gdx.Gdx.input;
-
-import java.lang.management.ManagementFactory;
 
 import com.andedit.viewmc.graphic.MeshVert;
 import com.andedit.viewmc.graphic.QuadIndex;
@@ -18,7 +15,6 @@ import com.andedit.viewmc.util.API;
 import com.andedit.viewmc.util.Logger;
 import com.andedit.viewmc.util.Util;
 import com.badlogic.gdx.ApplicationAdapter;
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
@@ -38,7 +34,8 @@ public class Main extends ApplicationAdapter {
 
 	public StageUI stage;
 	
-	private final InputHolder inputs = new InputHolder();
+	private final InputHolder inputsAfter = new InputHolder();
+	private final InputHolder inputsBefore = new InputHolder();
 	private final Array<Runnable> updates = new Array<>();
 	private Screen screen;
 	private @Null Screen newScreen;
@@ -54,12 +51,10 @@ public class Main extends ApplicationAdapter {
 		//app.setLogLevel(ManagementFactory.getRuntimeMXBean().getInputArguments().toString().contains("-agentlib:jdwp")?Logger.DEBUG:Logger.INFO);
 		app.setLogLevel(Logger.DEBUG);
 		
-		LOGGER.debug((Gdx.gl30 != null) + "\n" + graphics.getGLVersion().getDebugVersionString());
-		
 		QuadIndex.init();
 		MeshVert.preInit();
 		stage = new StageUI(new ScreenViewport());
-		input.setInputProcessor(new InputMultiplexer(Debugs.INPUT, stage, inputs));
+		input.setInputProcessor(new InputMultiplexer(Debugs.INPUT, inputsBefore, stage, inputsAfter));
 		
 		ShaderProgram.pedantic = false;
 		gl.glEnable(GL20.GL_DEPTH_TEST);
@@ -110,7 +105,8 @@ public class Main extends ApplicationAdapter {
 
 		stage.clear(); // Always clear UI when switching screen.
 		screen.show();
-		inputs.set(screen.getInput());
+		inputsBefore.set(screen.getInputBefore());
+		inputsAfter.set(screen.getInputAfter());
 		
 		System.gc();
 	}
@@ -164,7 +160,7 @@ public class Main extends ApplicationAdapter {
 	@Override
 	public void resize(int width, int height) {
 		var view = (ScreenViewport)stage.getViewport();
-		view.setUnitsPerPixel(1 / (float)Math.max(1, MathUtils.round(height/320f))); // 0.0065f
+		view.setUnitsPerPixel(1 / (float)Math.max(1, MathUtils.round(height/320f))); // 320f
 		view.update(width, height, true);
 		if (screen != null) {
 			screen.resize(view);

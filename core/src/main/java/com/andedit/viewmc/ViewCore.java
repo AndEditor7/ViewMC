@@ -14,13 +14,13 @@ import com.andedit.viewmc.structure.Structure;
 import com.andedit.viewmc.structure.StructureRenderer;
 import com.andedit.viewmc.ui.StructureUI;
 import com.andedit.viewmc.ui.util.UIManager;
-import com.andedit.viewmc.util.Util;
 import com.badlogic.gdx.Input.Buttons;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
 import net.querz.nbt.io.NBTUtil;
@@ -43,6 +43,13 @@ public class ViewCore implements Screen {
 	
 	final InputHolder inputHolder = new InputHolder();
 	final Input inputCore = new Input();
+	
+	// memory
+	
+	public ViewCore(Resources resources, Structure structure) {
+		this(resources);
+		setStructure(structure);
+	}
 
 	public ViewCore(Resources resources) {
 		this.resources = resources;
@@ -71,7 +78,7 @@ public class ViewCore implements Screen {
 
 	@Override
 	public void render() {
-		Util.glClear();
+		ScreenUtils.clear(0.15f, 0.15f, 0.15f, 1f, true);
 		manager.update();
 		if (!renderer.hasStructure()) return;
 		
@@ -113,8 +120,8 @@ public class ViewCore implements Screen {
 	}
 	
 	@Override
-	public InputProcessor getInput() {
-		return new InputMultiplexer(manager.input, inputHolder);
+	public InputProcessor getInputAfter() {
+		return new InputMultiplexer(manager.inputAfter, inputHolder);
 	}
 	
 	@Override
@@ -183,8 +190,8 @@ public class ViewCore implements Screen {
 				float z = (up.z*deltaY) + (rit.z*deltaX);
 				pos.add(x, y, z);
 			} else {
-				camera.pitch += deltaY * 0.6f;
-				camera.yaw += deltaX * 0.6f;
+				camera.pitch += deltaY * 0.5f;
+				camera.yaw += deltaX * 0.5f;
 				camera.updateRotation();
 			}
 			

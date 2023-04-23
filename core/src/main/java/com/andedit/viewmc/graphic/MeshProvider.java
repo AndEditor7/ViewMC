@@ -2,6 +2,7 @@ package com.andedit.viewmc.graphic;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.function.Supplier;
 
 import com.andedit.viewmc.block.BlockModel.Quad;
 import com.andedit.viewmc.resource.Resources;
@@ -12,9 +13,13 @@ public class MeshProvider {
 	public final Resources resources;
 	
 	public MeshProvider(Resources resources) {
+		this(resources, MeshBuilder::new);
+	}
+	
+	public MeshProvider(Resources resources, Supplier<MeshBuilder> supplier) {
 		this.resources = resources;
 		for (var layer : RenderLayer.VALUES) {
-			builders.put(layer, new MeshBuilder());
+			builders.put(layer, supplier.get());
 		}
 	}
 	

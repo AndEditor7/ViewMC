@@ -13,6 +13,7 @@ import com.andedit.viewmc.graphic.ChunkMesh;
 import com.andedit.viewmc.graphic.MeshProvider;
 import com.andedit.viewmc.graphic.QuadIndex;
 import com.andedit.viewmc.graphic.RenderLayer;
+import com.andedit.viewmc.graphic.Renderer;
 import com.andedit.viewmc.graphic.SkyBox;
 import com.andedit.viewmc.graphic.TexBinder;
 import com.andedit.viewmc.graphic.renderer.Renderers;
@@ -27,7 +28,7 @@ import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.Null;
 import com.badlogic.gdx.utils.ObjectSet;
 
-public class WorldRenderer implements Disposable {
+public class WorldRenderer implements Renderer {
 	
 	public static final int RADIUS_H = 12 + 1;
 	public static final float RADIUS_SCL = 0.8f;
@@ -67,7 +68,9 @@ public class WorldRenderer implements Disposable {
 		culling = new CaveCullingTest(this, world);
 	}
 	
-	public void render(Camera camera) {
+	@Override
+	public void render(com.badlogic.gdx.graphics.Camera cam) {
+		var camera = (Camera)cam;
 		final var camPos = camera.position;
 		chunkPos.set(camPos.floorX()>>4, camPos.floorY()>>4, camPos.floorZ()>>4);
 		camera.far = RADIUS_H * 20;

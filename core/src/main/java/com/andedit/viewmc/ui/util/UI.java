@@ -23,7 +23,12 @@ public interface UI extends Event {
 	}
 	
 	@Null
-	default InputProcessor getInput() {
+	default InputProcessor getInputBefore() {
+		return null;
+	};
+	
+	@Null
+	default InputProcessor getInputAfter() {
 		return null;
 	};
 	

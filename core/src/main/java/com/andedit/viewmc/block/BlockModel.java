@@ -25,8 +25,6 @@ import com.andedit.viewmc.util.TexReg;
 import com.andedit.viewmc.util.Util;
 import com.andedit.viewmc.world.BlockView;
 import com.andedit.viewmc.world.Lights;
-import com.andedit.viewmc.world.Section19;
-import com.andedit.viewmc.world.Section;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
@@ -404,7 +402,7 @@ public class BlockModel implements BlockLike, Iterable<Quad> {
 					
 					var result = lighting.getResult(a, b, face.isPositive() ? c : 1f-c);
 					
-					builder.setLight(shadeLight * result.aoLit, result.blockLit, result.skyLit);
+					builder.setLight(shadeLight, result.aoLit, result.blockLit, result.skyLit);
 					builder.vert(v.x+xf, v.y+yf, v.z+zf, t.x, t.y);
 				}
 			} else {
@@ -414,7 +412,7 @@ public class BlockModel implements BlockLike, Iterable<Quad> {
 				int z0 = z + getOffset(Axis.Z);
 				
 				int light = view.getLight(x0, y0, z0);
-				builder.setLight(shadeLight, Lights.toBlockF(light), Lights.toSkyF(light));
+				builder.setLight(shadeLight, 1, Lights.toBlockF(light), Lights.toSkyF(light));
 				builder.vert(v1.x+xf, v1.y+yf, v1.z+zf, t1.x, t1.y);
 				builder.vert(v2.x+xf, v2.y+yf, v2.z+zf, t2.x, t2.y);
 				builder.vert(v3.x+xf, v3.y+yf, v3.z+zf, t3.x, t3.y);

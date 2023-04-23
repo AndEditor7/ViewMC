@@ -76,7 +76,7 @@ public class PauseUI extends BaseUI {
 	}
 	
 	@Override
-	public InputProcessor getInput() {
+	public InputProcessor getInputAfter() {
 		return input;
 	}
 	

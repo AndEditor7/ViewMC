@@ -4,27 +4,39 @@ import static com.badlogic.gdx.Gdx.files;
 
 import com.andedit.viewmc.graphic.TexBinder;
 import com.andedit.viewmc.graphic.renderer.ViewRenderer;
+import com.andedit.viewmc.graphic.vertex.Vertex;
 import com.andedit.viewmc.ui.drawable.FlashNinePatchDrawable;
 import com.andedit.viewmc.ui.drawable.TexRegDrawable;
 import com.andedit.viewmc.util.McBitmapFont;
+import com.andedit.viewmc.util.Util;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Pixmap.Format;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.Texture.TextureFilter;
+import com.badlogic.gdx.graphics.VertexAttribute;
+import com.badlogic.gdx.graphics.VertexAttributes;
+import com.badlogic.gdx.graphics.VertexAttributes.Usage;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.BitmapFontCache;
 import com.badlogic.gdx.graphics.g2d.NinePatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.PixmapTextureData;
+import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.scenes.scene2d.ui.Button.ButtonStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle;
+import com.badlogic.gdx.scenes.scene2d.ui.List.ListStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane.ScrollPaneStyle;
+import com.badlogic.gdx.scenes.scene2d.ui.SelectBox.SelectBoxStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.TextField.TextFieldStyle;
+import com.badlogic.gdx.scenes.scene2d.ui.Window.WindowStyle;
+import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.scenes.scene2d.utils.NinePatchDrawable;
+import com.badlogic.gdx.utils.FloatArray;
 
 public class Assets {
 	private static final String DEFAULT = "default";
@@ -41,6 +53,8 @@ public class Assets {
 	public static Texture pack;
 	
 	public static ViewRenderer viewRenderer;
+	public static ShaderProgram ssaaShader;
+	public static Vertex quad;
 	
 	public static final Skin skin = new Skin();
 	
@@ -69,6 +83,19 @@ public class Assets {
 		frame = new NinePatch(new TextureRegion(guiTex, 0, 124, 4, 4), 1, 1, 1, 1);
 		
 		viewRenderer = new ViewRenderer();
+		ssaaShader = Util.newShader("shaders/ssaa");
+		
+		var attributes = new VertexAttributes(new VertexAttribute(Usage.Position, 2, "a_position"));
+		quad = Vertex.newVbo(attributes, GL20.GL_STATIC_DRAW);
+		
+		var a = 1f;
+		var floatArray = new FloatArray(8);
+		floatArray.add(-a, -a);
+		floatArray.add(-a, a);
+		floatArray.add(a, a);
+		floatArray.add(a, -a);
+		
+		quad.setVertices(floatArray.items, floatArray.size, 0);
 		
 		var pixmap = new Pixmap(files.internal("day_light.png"));
 		var buffer = pixmap.getPixels();
@@ -94,18 +121,27 @@ public class Assets {
 	private static void skin() {
 		skin.add(DEFAULT, font);
 		skin.add(DEFAULT, new LabelStyle(font, Color.WHITE));
-		
+
+		var frameDraw = new NinePatchDrawable(frame);
+		Drawable drawable = new TexRegDrawable(blank, new Color(0.1f, 0.1f, 0.1f, 1f));
 		var field = new TextFieldStyle(font, Color.WHITE, new TexRegDrawable(blank),
-				new TexRegDrawable(blank, new Color(0.3f, 0.3f, 1, 1)), new TexRegDrawable(blank, new Color(0, 0, 0, 0.7f)));
+				new TexRegDrawable(blank, new Color(0.3f, 0.3f, 1, 1)), drawable);
+		drawable.setLeftWidth(4);
 		
 		skin.add(DEFAULT, field);
-		
-		var frameDraw = new NinePatchDrawable(frame);
+
 		var button = new ButtonStyle();
+		button.up = frameDraw.tint(Color.FIREBRICK);
+		button.disabled = frameDraw.tint(new Color(0.2f, 0.2f, 0.2f, 1));
+		button.checked = frameDraw.tint(new Color(77/255f, 184/255f, 27/255f, 1));
+		skin.add("checked", button);
+		
+		button = new ButtonStyle();
 		button.up = frameDraw.tint(new Color(0.5f, 0.5f, 0.5f, 1));
 		button.down = frameDraw.tint(new Color(0.4f, 0.5f, 0.6f, 1));
 		button.disabled = frameDraw.tint(new Color(0.2f, 0.2f, 0.2f, 1));
 		skin.add(DEFAULT, button);
+		
 		
 		var textButton = new TextButtonStyle();
 		textButton.font = font;
@@ -169,6 +205,26 @@ public class Assets {
 		scroll.vScroll = scroll.hScroll;
 		scroll.vScrollKnob = scroll.hScrollKnob;
 		skin.add(DEFAULT, scroll);
+		
+		var nine = new NinePatch(frame, Color.DARK_GRAY);
+		nine.setTopHeight(12);
+		var window = new WindowStyle(font, Color.WHITE, new NinePatchDrawable(nine));
+		window.stageBackground = new TexRegDrawable(blank, new Color(0,0,0,0.5f));
+		skin.add(DEFAULT, window);
+		
+		var list = new ListStyle();
+		list.font = font;
+		list.selection = frameDraw.tint(new Color(0.35f, 0.4f, 0.6f, 1));
+		list.background = frameDraw.tint(new Color(0.1f, 0.1f, 0.1f, 1));
+		skin.add(DEFAULT, list);
+		
+		var box = new SelectBoxStyle();
+		box.font = font;
+		box.background = frameDraw.tint(new Color(0.5f, 0.5f, 0.5f, 1));
+		box.backgroundDisabled = frameDraw.tint(new Color(0.2f, 0.2f, 0.2f, 1));
+		box.scrollStyle = skin.get(ScrollPaneStyle.class);
+		box.listStyle = skin.get(ListStyle.class);
+		skin.add(DEFAULT, box);
 	}
 	
 	static void dispose() {
@@ -177,5 +233,7 @@ public class Assets {
 		lightMapBind.dispose();
 		pack.dispose();
 		viewRenderer.dispose();
+		quad.dispose();
+		ssaaShader.dispose();
 	}
 }

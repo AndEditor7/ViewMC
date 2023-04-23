@@ -24,7 +24,6 @@ public class LoadingIcon extends Widget {
 		quads[5] = new Quad(2, 1);
 		quads[6] = new Quad(2, 0);
 		quads[7] = new Quad(1, 0);
-		setSize(getPrefWidth(), getPrefHeight());
 	}
 	
 	@Override
@@ -61,12 +60,12 @@ public class LoadingIcon extends Widget {
 	
 	@Override
 	public float getPrefWidth() {
-		return 32;
+		return 16;
 	}
 	
 	@Override
 	public float getPrefHeight() {
-		return 32;
+		return 16;
 	}
 	
 	private static class Quad {

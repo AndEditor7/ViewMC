@@ -7,6 +7,11 @@ public class Vector3d {
 	public double x, y, z;
 	
 	public Vector3d() {
+		
+	}
+	
+	public Vector3d(Vector3 vec) {
+		this(vec.x, vec.y, vec.z);
 	}
 	
 	public Vector3d(double x, double y, double z) {

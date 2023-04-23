@@ -148,6 +148,20 @@ public final class Util {
 		return array;
 	}
 	
+	public static int countChar(@Null CharSequence chars, char c) {
+		if (chars == null) return 0;
+		
+		int count = 0;
+		int len = chars.length();
+		for (int i = 0; i < len; i++) {
+			if (chars.charAt(i) == c) {
+				count++;
+			}
+		}
+		
+		return count;
+	}
+	
 	public static int[] toIntArray(IntBuffer buffer) {
 		var ints = new int[buffer.remaining()];
 		for (int i = buffer.position(); i < buffer.limit(); i++) {

@@ -3,7 +3,7 @@
 precision mediump float;
 #endif
 
-in float ambientLight;
+in float light;
 in vec2 texCoords;
 in vec4 color;
 
@@ -15,7 +15,7 @@ void main() {
 	vec4 pixel = texture(u_texture, texCoords);
 	pixel *= color;
 	if (pixel.a < 0.01) discard;
-	pixel.rgb *= ambientLight;
+	pixel.rgb *= light;
 	
 	fragColor = pixel;
 }

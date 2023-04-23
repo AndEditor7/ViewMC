@@ -50,7 +50,7 @@ public class MenuUI extends BaseUI {
 	}
 	
 	@Override
-	public InputProcessor getInput() {
-		return super.getInput();
+	public InputProcessor getInputAfter() {
+		return super.getInputAfter();
 	}
 }
