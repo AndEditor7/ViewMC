@@ -157,12 +157,8 @@ public class CaveCullingTest {
 			if (x < 1 || y < 1 || z < 1 || x > RADIUS_H*2 || y > RADIUS_V*2 || z > RADIUS_H*2) {
 				return false;
 			}
-			
-			if (!occupation.get(getIndex(x, y, z))) {
-				return true;
-			}
-			
-			return false;
+
+			return !occupation.get(getIndex(x, y, z));
 		}
 		
 		static int getIndex(int x, int y, int z) {

@@ -72,6 +72,7 @@ public class Biomes {
 		put("end_midlands", new Biome(0.5f, 0.5f, 0));
 		put("small_end_islands", new Biome(0.5f, 0.5f, 0));
 		put("end_barrens", new Biome(0.5f, 0.5f, 0));
+		put("cherry_grove", new Biome(0.5f, 0.8f, 0x78A7FF, 0xB6DB61));
 	}
 
 	private static void put(String id, Biome biome) {

@@ -16,7 +16,7 @@ public final class Camera extends PerspectiveCamera
 	public float pitch;
 	/** A yaw of left and right. */
 	public float yaw;
-	/** A roll like a doing barrel roll. */
+	/** A roll like doing a barrel roll. */
 	public float roll;
 	
 	public final Vector3 right = new Vector3();

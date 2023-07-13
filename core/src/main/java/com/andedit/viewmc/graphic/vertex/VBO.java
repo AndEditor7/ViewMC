@@ -12,7 +12,7 @@ import com.badlogic.gdx.utils.BufferUtils;
 public class VBO implements Vertex {
 	
 	private int glDraw;
-	private int handle;
+	private final int handle;
 	private int size;
 	private boolean isBound;
 	private final VertexAttributes attributes;

@@ -103,7 +103,7 @@ public class BlockModel implements BlockLike, Iterable<Quad> {
 			var box = pair.left;
 			if (box.getWidth() > 0.99f && box.getHeight() > 0.99f && box.getDepth() > 0.99f) {
 				for (var quad : pair.right) {
-					if (quad.blend != TextureBlend.SOILD) {
+					if (quad.blend != TextureBlend.SOLID) {
 						continue loop;
 					}
 				}
@@ -249,7 +249,7 @@ public class BlockModel implements BlockLike, Iterable<Quad> {
 		public boolean shade = true;
 		public boolean isAlign = true;
 		public boolean allowRender = false; // Allows other quad to render.
-		public TextureBlend blend = TextureBlend.SOILD;
+		public TextureBlend blend = TextureBlend.SOLID;
 		private TexReg region;
 		private @Null Identifier texAnimated;
 		
@@ -449,7 +449,7 @@ public class BlockModel implements BlockLike, Iterable<Quad> {
 		
 		void setSprite(Sprite sprite) {
 			layer = sprite.blend.getRenderLayer();
-			allowRender = sprite.blend != TextureBlend.SOILD;
+			allowRender = sprite.blend != TextureBlend.SOLID;
 			blend = sprite.blend;
 			texAnimated = sprite.isAnimated ? sprite.id : null;
 		}

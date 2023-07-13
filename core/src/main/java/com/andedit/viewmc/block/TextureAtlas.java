@@ -18,13 +18,9 @@ import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.Texture.TextureFilter;
 import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.Disposable;
-import com.badlogic.gdx.utils.IntArray;
-import com.badlogic.gdx.utils.Null;
-import com.badlogic.gdx.utils.ObjectMap;
-import com.badlogic.gdx.utils.ObjectSet;
-import com.badlogic.gdx.utils.OrderedSet;
+import com.badlogic.gdx.utils.*;
+
+import java.util.Comparator;
 
 /**
  * The Block Texture Atlas. It contains all block textures in the texture sheet
@@ -76,6 +72,9 @@ public class TextureAtlas implements Disposable {
 			var pixmap = pair.right;
 			totalSize += pixmap.getWidth() * pixmap.getHeight();
 		}
+
+		//new Sort().sort(pixList.items, Comparator.comparingInt(a -> a.right.getWidth() * a.right.getHeight()), 0, pixList.size);
+		pixList.sort(Comparator.comparingInt(a -> a.right.getWidth() * a.right.getHeight()));
 		
 		totalSize = (int)(totalSize / 0.9f);
 		int size = MathUtils.nextPowerOfTwo((int) Math.sqrt(totalSize));

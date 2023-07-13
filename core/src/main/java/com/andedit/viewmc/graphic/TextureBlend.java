@@ -1,14 +1,14 @@
 package com.andedit.viewmc.graphic;
 
 public enum TextureBlend {
-	SOILD, TRANSPARENT, TRANSLUCENT;
+	SOLID, TRANSPARENT, TRANSLUCENT;
 	
-	public boolean isSoild() {
-		return this == SOILD;
+	public boolean isSolid() {
+		return this == SOLID;
 	}
 	
 	public boolean isTrans() {
-		return this != SOILD;
+		return this != SOLID;
 	}
 	
 	public RenderLayer getRenderLayer() {

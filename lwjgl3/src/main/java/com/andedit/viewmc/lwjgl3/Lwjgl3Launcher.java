@@ -8,12 +8,16 @@ import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration.GLEmulation;
 import com.badlogic.gdx.utils.Collections;
+import games.spooky.gdx.nativefilechooser.desktop.DesktopFileChooser;
+
+import javax.swing.*;
 
 /** Launches the desktop (LWJGL3) application. */
 public class Lwjgl3Launcher {
 	public static void main(String[] args) {
 		Collections.allocateIterators = true;
 		Main.api = new DesktopAPI();
+		Main.fc = new DesktopFileChooser();
 		DesktopGL.i = new com.andedit.viewmc.lwjgl3.DesktopGL();
 		createApplication();
 	}
@@ -30,7 +34,7 @@ public class Lwjgl3Launcher {
 		if (ManagementFactory.getRuntimeMXBean().getInputArguments().toString().contains("-agentlib:jdwp"))
 		config.enableGLDebugOutput(true, System.err);
 		config.disableAudio(true);
-		config.setWindowedMode(1000, 720);
+		config.setWindowedMode(900, 600);
 		
 		config.setWindowListener(((DesktopAPI)Main.api).window);
 		

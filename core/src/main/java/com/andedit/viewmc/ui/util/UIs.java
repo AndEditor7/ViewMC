@@ -13,17 +13,22 @@ import com.badlogic.gdx.scenes.scene2d.ui.Button;
 import com.badlogic.gdx.scenes.scene2d.ui.Window;
 
 public class UIs {
-	
-	public static Window newWindow(String title) {
-		return newWindow(title, (w, e) -> w.remove());
-	}
-	
-	public static Window newWindow(String title, BiConsumer<Window, Event> closeCall) {
+
+	public static Window newWindowWoClose(String title) {
 		var window = new Window(title, Assets.skin);
 		window.setModal(true);
 		window.setResizable(true);
 		window.getTitleTable().padLeft(1);
 		window.setResizeBorder(4);
+		return window;
+	}
+
+	public static Window newWindow(String title) {
+		return newWindow(title, (w, e) -> w.remove());
+	}
+	
+	public static Window newWindow(String title, BiConsumer<Window, Event> closeCall) {
+		var window = newWindowWoClose(title);
 		window.setUserObject(new CloseCall(closeCall));
 		
 		var closeButt = new Button(new TexRegDrawable(Assets.blank, Color.FIREBRICK), new TexRegDrawable(Assets.blank, Color.FIREBRICK.cpy().lerp(Color.BLACK, 0.3f)));

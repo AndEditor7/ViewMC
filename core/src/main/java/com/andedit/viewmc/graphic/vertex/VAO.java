@@ -17,7 +17,7 @@ public class VAO implements Vertex {
 	private static final IntBuffer intBuf = BufferUtils.newIntBuffer(1);
 
 	private int glDraw, size;
-	private int handle, vao;
+	private final int handle, vao;
 	private boolean isBound;
 	private final VertexAttributes attributes;
 	

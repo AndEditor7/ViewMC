@@ -42,15 +42,6 @@ public class VA implements Vertex {
 	}
 	
 	@Override
-	public void setDraw(int glDraw) {
-	}
-
-	@Override
-	public int getDraw() {
-		return GL20.GL_DYNAMIC_DRAW;
-	}
-	
-	@Override
 	public int size() {
 		return size;
 	}

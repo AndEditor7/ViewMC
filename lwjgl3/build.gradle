@@ -9,6 +9,7 @@ dependencies {
 	//implementation "com.badlogicgames.gdx:gdx-lwjgl3-angle:$gdxVersion"
 	implementation "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"
 	implementation "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
+	implementation "games.spooky.gdx:gdx-nativefilechooser-desktop-lwjgl:2.2.0"
 	implementation project(':core')
 }
 

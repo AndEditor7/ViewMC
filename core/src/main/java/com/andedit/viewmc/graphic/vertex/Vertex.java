@@ -19,8 +19,10 @@ public interface Vertex extends Disposable {
 	void setVertices(float[] array, int size, int offset);
 	void bind(ShaderProgram shader);
 	void unbind(ShaderProgram shader);
-	void setDraw(int glDraw);
-	int getDraw();
+	default void setDraw(int glDraw) {}
+	default int getDraw() {
+		return GL20.GL_DYNAMIC_DRAW;
+	}
 	int size();
 	
 	default void setVertexAttributes(ShaderProgram shader, @Null Buffer buffer) {

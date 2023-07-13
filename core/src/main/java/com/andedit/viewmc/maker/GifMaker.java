@@ -5,6 +5,7 @@ import static com.andedit.viewmc.MakerCore.recordingSettings;
 import static com.badlogic.gdx.Gdx.files;
 import static com.badlogic.gdx.Gdx.graphics;
 
+import java.io.File;
 import java.io.OutputStream;
 import java.util.concurrent.Future;
 
@@ -18,6 +19,7 @@ import com.andedit.viewmc.ui.actor.ProgressBar;
 import com.andedit.viewmc.ui.util.UIs.CloseCall;
 import com.andedit.viewmc.util.Average;
 import com.andedit.viewmc.util.Progress;
+import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.Pixmap;
@@ -46,6 +48,7 @@ public class GifMaker extends Maker {
 	private final MakerFrame frame;
 	
 	private final Window window;
+	private final FileHandle file;
 	private final LoadingIcon icon;
 	private final Label status;
 	private final ProgressBar bar;
@@ -58,8 +61,13 @@ public class GifMaker extends Maker {
 	@Null
 	private Future<ByteArray> future;
 
-	public GifMaker(MakerCore core, Window window) {
+	public GifMaker(MakerCore core, Window window, FileHandle file) {
 		super(core);
+
+		if (!file.exists() && !file.name().endsWith(".gif")) {
+			file = files.absolute(file.path()+".gif");
+		}
+		this.file = file;
 		this.window = window;
 		scene = core.scene.newInstance();
 		pixmaps = new Array<>();
@@ -143,7 +151,7 @@ public class GifMaker extends Maker {
 						progress.incStep();
 						
 						if (pixmaps.size == 1) {
-							PixmapIO.writePNG(files.absolute("/home/andeditor7/Pictures/test.png"), pixmaps.first());
+							PixmapIO.writePNG(file, pixmaps.first());
 						}
 						
 						frames++;
@@ -158,7 +166,7 @@ public class GifMaker extends Maker {
 		}
 		
 		if (isDoneRecording && future == null) {
-			future = Statics.theadExe.submit(new GifWriterTask(gif, pixmaps, fps));
+			future = Statics.threadExe.submit(new GifWriterTask(gif, pixmaps, fps));
 		}
 		
 		if (future != null && future.isDone()) {
@@ -166,7 +174,6 @@ public class GifMaker extends Maker {
 			
 			try {
 				array = future.get();
-				var file = files.absolute("/home/andeditor7/Pictures/test.gif");
 				synchronized (gif) {
 					file.writeBytes(array.items, 0, array.size, false);
 				}

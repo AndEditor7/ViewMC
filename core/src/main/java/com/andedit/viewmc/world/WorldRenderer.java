@@ -31,7 +31,7 @@ import com.badlogic.gdx.utils.ObjectSet;
 public class WorldRenderer implements Renderer {
 	
 	public static final int RADIUS_H = 12 + 1;
-	public static final float RADIUS_SCL = 0.8f;
+	public static final float RADIUS_SCL = 1f;
 	public static final int RADIUS_V = (int)(RADIUS_H*RADIUS_SCL);
 	public static final int BUILDERS = 20; // 20
 	
@@ -73,7 +73,7 @@ public class WorldRenderer implements Renderer {
 		var camera = (Camera)cam;
 		final var camPos = camera.position;
 		chunkPos.set(camPos.floorX()>>4, camPos.floorY()>>4, camPos.floorZ()>>4);
-		camera.far = RADIUS_H * 20;
+		camera.far = RADIUS_H * 24;
 		
 		if (Debugs.isKeyJustPressed(Debugs.F4)) {
 			clearMeshes();
@@ -85,8 +85,7 @@ public class WorldRenderer implements Renderer {
 		//scanForChunks();
 		//scanForMeshs(camera);
 		updateMeshes();
-		
-		int num = 0;
+
 		transToRender.clear();
 		soildToRender.clear();
 		for (int i = 0; i < meshes.size; i++) {
@@ -99,7 +98,6 @@ public class WorldRenderer implements Renderer {
 			}
 			
 			if (!mesh.pass(chunkPos, 0) && culling.canRender(mesh.x, mesh.y, mesh.z)) {
-				num++;
 				if (!mesh.isEmpty(RenderLayer.SOILD)) {
 					soildToRender.add(mesh);
 				}
@@ -108,7 +106,6 @@ public class WorldRenderer implements Renderer {
 				}
 			}
 		}
-		//System.out.println(num);
 
 		if (transToRender.notEmpty()) {
 			var gridA = new GridPoint3();
@@ -225,7 +222,7 @@ public class WorldRenderer implements Renderer {
 	
 	boolean isDirty(int x, int y, int z) {
 		var section = world.getSection(x, y, z);
-		return section == null ? false : section.isDirty;
+		return section != null && section.isDirty;
 	}
 	
 	public void setDirt(boolean isDirty, int x, int y, int z) {

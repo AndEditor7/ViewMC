@@ -13,7 +13,7 @@ import net.querz.nbt.tag.CompoundTag;
 public class Structure implements BlockRenderView {
 	
 	private final short[][][] data;
-	private final BlockState blocks[];
+	private final BlockState[] blocks;
 	private final Resources resources;
 	
 	public final int sizeX, sizeY, sizeZ;
@@ -40,7 +40,7 @@ public class Structure implements BlockRenderView {
 			int x = posList.get(0).asInt();
 			int y = posList.get(1).asInt();
 			int z = posList.get(2).asInt();
-			data[x][y][z] = comp.getNumber("state").shortValue();
+			data[x][y][z] = (short)(comp.getNumber("state").intValue() + 1);
 		}
 	}
 	
@@ -64,7 +64,9 @@ public class Structure implements BlockRenderView {
 		if (x < 0 || y < 0 || z < 0 || x >= sizeX || y >= sizeY || z >= sizeZ) {
 			return AirBlock.INSTANCE.getState();
 		}
-		return blocks[data[x][y][z] & 0xFFFF];
+		int index = (data[x][y][z] & 0xFFFF) - 1;
+		if (index == -1) return AirBlock.INSTANCE.getState();
+		return blocks[index];
 	}
 
 	@Override

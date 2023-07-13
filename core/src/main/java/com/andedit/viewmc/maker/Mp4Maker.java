@@ -1,15 +1,14 @@
 package com.andedit.viewmc.maker;
 
 import static com.andedit.viewmc.MakerCore.recordingSettings;
-import static com.andedit.viewmc.Statics.theadExe;
+import static com.andedit.viewmc.Statics.threadExe;
 import static com.badlogic.gdx.Gdx.files;
 import static com.badlogic.gdx.Gdx.graphics;
 
+import java.util.HashMap;
 import java.util.Vector;
 
-import org.jcodec.api.SequenceEncoder;
-import org.jcodec.common.model.ColorSpace;
-import org.jcodec.common.model.Picture;
+import com.badlogic.gdx.files.FileHandle;
 
 import com.andedit.viewmc.Assets;
 import com.andedit.viewmc.MakerCore;
@@ -21,10 +20,17 @@ import com.andedit.viewmc.util.Average;
 import com.andedit.viewmc.util.Progress;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
-import com.badlogic.gdx.graphics.Pixmap.Format;
+import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Window;
+import org.jcodec.api.SequenceEncoder;
+import org.jcodec.common.Codec;
+import org.jcodec.common.Format;
+import org.jcodec.common.io.NIOUtils;
+import org.jcodec.common.model.ColorSpace;
+import org.jcodec.common.model.Picture;
+import org.jcodec.common.model.Rational;
 
 public class Mp4Maker extends Maker {
 
@@ -40,6 +46,7 @@ public class Mp4Maker extends Maker {
 	private final Vector<Object> buffer = new Vector<>(BUFFER_SIZE);
 	
 	private final Window window;
+	private final FileHandle file;
 	private final LoadingIcon icon;
 	private final Label status;
 	private final ProgressBar bar;
@@ -52,20 +59,26 @@ public class Mp4Maker extends Maker {
 	private boolean isDone;
 	private float time;
 	
-	public Mp4Maker(MakerCore core, Window window) throws Exception {
+	public Mp4Maker(MakerCore core, Window window, FileHandle file) throws Exception {
 		super(core);
 		this.window = window;
+
+		if (!file.exists() && !file.name().endsWith(".mp4")) {
+			file = files.absolute(file.path()+".mp4");
+		}
+		this.file = file;
 		
 		fps = recordingSettings.getInt("fps");
 		progress = new Progress();
 		progress.newProgess(1);
 		progress.newStep(MathUtils.floor(fps * recordingSettings.getFloat("length")));
 		
-		var file = files.absolute("/home/andeditor7/Videos/test.mp4");
-		
 		// This is a thread-safe method since this will handle the encoding stuff.
-		var future = theadExe.submit(() -> {
-			return SequenceEncoder.createSequenceEncoder(file.file(), fps);
+		var future = threadExe.submit(() -> {
+			var encoder = new SequenceEncoder(NIOUtils.writableChannel(this.file.file()), Rational.R(fps, 1), Format.MOV, Codec.H264, null);
+			//var opts = new HashMap<String, String>();
+			//encoder.configureCodec(opts);
+			return encoder;
 		});
 		encoder = future.get();
 		
@@ -80,8 +93,8 @@ public class Mp4Maker extends Maker {
 		var height = recordingSettings.getInt("height");
 		var ssaa = (SSAA)recordingSettings.get("quality");
 		frame = ssaa != SSAA.NONE ? 
-		new MakerFrameSSAA(Format.RGB888, width, height, ssaa.gridSize) : 
-		new MakerFrameNormal(Format.RGB888, width, height);
+		new MakerFrameSSAA(Pixmap.Format.RGB888, width, height, ssaa.gridSize) :
+		new MakerFrameNormal(Pixmap.Format.RGB888, width, height);
 		
 		window.setSize(200, 120);
 		
@@ -96,7 +109,7 @@ public class Mp4Maker extends Maker {
 		
 		window.setUserObject(new CloseCall((w, e) -> {
 			close = true;
-			theadExe.execute(Mp4Maker.this::finish);
+			threadExe.execute(Mp4Maker.this::finish);
 		}));
 		
 		last = System.nanoTime();
@@ -116,7 +129,7 @@ public class Mp4Maker extends Maker {
 					
 					if (scene.update(camera, 1000d/fps/1000d)) {
 						isDone = true;
-						theadExe.execute(this::finish);
+						threadExe.execute(this::finish);
 						break loop;
 					}
 					
@@ -131,11 +144,12 @@ public class Mp4Maker extends Maker {
 						var data = pic.getPlaneData(0);
 						var len = data.length;
 						for (int i = 0; i < len; i++) {
-							data[i] = (byte) (buffer.get(i) - 128);
+							int a = Math.min(buffer.get(i) + 15, 255);
+							data[i] = (byte) (a - 128);
 						}
 					}
 					
-					theadExe.execute(new Encode(pic, lock));
+					threadExe.execute(new Encode(pic, lock));
 				}
 				time -= STEP;
 			} while (time >= STEP);
@@ -174,7 +188,6 @@ public class Mp4Maker extends Maker {
 		public Encode(Picture picture, Object lock) {
 			this.picture = picture;
 			this.lock = lock;
-			
 		}
 		
 		@Override
@@ -187,7 +200,7 @@ public class Mp4Maker extends Maker {
 				} catch (Exception ex) {
 					ex.printStackTrace();
 					close = true;
-					theadExe.execute(Mp4Maker.this::finish);
+					threadExe.execute(Mp4Maker.this::finish);
 				}
 			}
 			

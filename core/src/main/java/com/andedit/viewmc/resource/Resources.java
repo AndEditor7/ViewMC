@@ -51,6 +51,7 @@ public class Resources implements DataResources, Disposable {
 		map.put("dark_oak_leaves", new LeavesBlock());
 		map.put("mangrove_leaves", new LeavesBlock());
 		map.put("azalea_leaves", new LeavesBlock());
+		map.put("cherry_leaves", new LeavesBlock());
 		map.put("flowering_azalea_leaves", new LeavesBlock());
 		map.put("water", water = new WaterBlock());
 		map.put("lava", new LavaBlock());

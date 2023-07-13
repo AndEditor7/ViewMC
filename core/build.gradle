@@ -6,5 +6,6 @@ dependencies {
 	api 'com.github.Querz:NBT:6.1'
 	api 'com.github.tommyettinger:anim8-gdx:0.3.14'
 	api 'com.moandjiezana.toml:toml4j:0.7.2'
-	api 'org.jcodec:jcodec:0.2.5'
+	api fileTree(dir: 'jars', include: '*.jar')
+	api "games.spooky.gdx:gdx-nativefilechooser:2.2.0"
 }

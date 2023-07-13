@@ -100,7 +100,7 @@ public class Assets {
 		var pixmap = new Pixmap(files.internal("day_light.png"));
 		var buffer = pixmap.getPixels();
 		
-		float brightness = 0.06f;
+		float brightness = 0.08f;
 		for (int i = buffer.position(); i < buffer.limit(); i++) {
 			float num = (buffer.get(i) & 0xFF) / 255f;
 			num = (float)Math.pow(num, 1.0/2.2);

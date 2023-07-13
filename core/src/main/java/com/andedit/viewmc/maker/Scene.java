@@ -25,7 +25,7 @@ public class Scene {
 	public void setStructure(Structure structure) {
 		center.set(structure.sizeX, structure.sizeY, structure.sizeZ);
 		distance = center.len();
-		center.set(structure.sizeX, structure.sizeY * 0.8f, structure.sizeZ).scl(0.5f);
+		center.set(structure.sizeX, structure.sizeY * 0.9f, structure.sizeZ).scl(0.5f);
 	}
 	
 	public boolean update(Camera camera, double delta) {
@@ -35,7 +35,7 @@ public class Scene {
 			isComplated = true;
 			time %= maxTime;
 		}
-		yaw = MathUtils.lerp(-rotDegrees, rotDegrees, (float)(time / maxTime)) + 50f;
+		yaw = MathUtils.lerp(-rotDegrees, rotDegrees, (float)(time / maxTime)) + 45f;
 		
 		//reset quaternion and then set its rotation.
 		quat.setEulerAngles(yaw, pitch, 0);

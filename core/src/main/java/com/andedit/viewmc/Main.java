@@ -22,14 +22,17 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Null;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import games.spooky.gdx.nativefilechooser.NativeFileChooser;
 
 /** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
 public class Main extends ApplicationAdapter {
 	public static final Main main = new Main();
 	
 	public static final Logger LOGGER = new Logger("Main");
-	
+
+
 	public static API api;
+	public static NativeFileChooser fc;
 	public static Array<Runnable> postInits = new Array<Runnable>();
 
 	public StageUI stage;

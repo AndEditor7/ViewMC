@@ -4,9 +4,11 @@ import static com.andedit.viewmc.Main.main;
 import static com.andedit.viewmc.MakerCore.formatSettings;
 import static com.andedit.viewmc.MakerCore.recordingSettings;
 import static com.andedit.viewmc.MakerCore.transSettings;
+import static com.badlogic.gdx.Gdx.app;
 import static com.badlogic.gdx.Gdx.graphics;
 
 import com.andedit.viewmc.Assets;
+import com.andedit.viewmc.Main;
 import com.andedit.viewmc.MakerCore;
 import com.andedit.viewmc.ViewCore;
 import com.andedit.viewmc.graphic.SSAA;
@@ -23,6 +25,8 @@ import com.andedit.viewmc.ui.util.BaseUI;
 import com.andedit.viewmc.ui.util.UIs;
 import com.andedit.viewmc.ui.util.UiUtil;
 import com.andedit.viewmc.util.Util;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.NinePatch;
 import com.badlogic.gdx.math.Vector2;
@@ -37,6 +41,9 @@ import com.badlogic.gdx.scenes.scene2d.utils.NinePatchDrawable;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.github.tommyettinger.anim8.Dithered.DitherAlgorithm;
+import games.spooky.gdx.nativefilechooser.NativeFileChooserCallback;
+import games.spooky.gdx.nativefilechooser.NativeFileChooserConfiguration;
+import games.spooky.gdx.nativefilechooser.NativeFileChooserIntent;
 
 /** GIF and Video maker UI */
 public class MakerUI extends BaseUI {
@@ -100,22 +107,55 @@ public class MakerUI extends BaseUI {
 		var textButton = new TextButton("Render", Assets.skin);
 		rightPanel.add(textButton).top().growX().prefSize(20).row();
 		textButton.addListener(Util.newListener(() -> {
-			var window = UIs.newWindow("Rendering...");
-			var format = formatSettings.get("format");
-			
-			if (format == MakerMode.MP4) {
-				try {
-					core.maker = new Mp4Maker(core, window);
-				} catch (Exception e) {
-					e.printStackTrace();
-					return;
-				}
-			} else if (format == MakerMode.GIF) {
-				core.maker = new GifMaker(core, window);
-			} else return;
-			
-			UiUtil.center(window, main.stage);
-			main.stage.addActor(window);
+			var conf = new NativeFileChooserConfiguration();
+			conf.directory = Gdx.files.absolute(System.getProperty("user.home"));
+			conf.title = "Save render file";
+			conf.intent = NativeFileChooserIntent.SAVE;
+
+			var label = new Label("A new save window prompted.", Assets.skin);
+			var prompt = UIs.newWindowWoClose("");
+			prompt.setSize(200, 70);
+			prompt.add(label);
+			UiUtil.center(prompt, main.stage);
+			main.stage.addActor(prompt);
+
+			if (graphics.isFullscreen()) {
+				graphics.setWindowedMode(900, 600);
+			}
+
+			app.postRunnable(() -> {
+				Main.fc.chooseFile(conf, new NativeFileChooserCallback() {
+					@Override
+					public void onFileChosen(FileHandle file) {
+						var window = UIs.newWindow("Rendering...");
+						var format = formatSettings.get("format");
+
+						if (format == MakerMode.MP4) {
+							try {
+								core.maker = new Mp4Maker(core, window, file);
+							} catch (Exception e) {
+								e.printStackTrace();
+								return;
+							}
+						} else if (format == MakerMode.GIF) {
+							core.maker = new GifMaker(core, window, file);
+						} else return;
+
+						prompt.remove();
+						UiUtil.center(window, main.stage);
+						main.stage.addActor(window);
+					}
+					@Override
+					public void onCancellation() {
+						prompt.remove();
+					}
+					@Override
+					public void onError(Exception exception) {
+						exception.printStackTrace();
+						prompt.remove();
+					}
+				});
+			});
 		}));
 		
 		textButton = new TextButton("Close", Assets.skin);
@@ -160,7 +200,7 @@ public class MakerUI extends BaseUI {
 			formatSettings.put("format", makerMode.getSelected());
 		}));
 		
-		formatSettings.putIfAbsent("da", DitherAlgorithm.NEUE);
+		formatSettings.putIfAbsent("da", DitherAlgorithm.NONE);
 		da = new SelectBox<DitherAlgorithm>(Assets.skin);
 		da.setItems(DitherAlgorithm.values());
 		da.setSelectedIndex(((DitherAlgorithm)formatSettings.get("da")).ordinal());
@@ -186,7 +226,7 @@ public class MakerUI extends BaseUI {
 		label.setAlignment(Align.center);
 		group.addActor(label);
 		
-		recordingSettings.putIfAbsent("quality", SSAA.SAMPLE4X);
+		recordingSettings.putIfAbsent("quality", SSAA.SAMPLE2X);
 		quality = new SelectBox<SSAA>(Assets.skin);
 		quality.setItems(SSAA.values());
 		quality.setSelectedIndex(((SSAA)recordingSettings.get("quality")).ordinal());

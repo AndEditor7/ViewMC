@@ -46,7 +46,7 @@ class TextureMaker {
 		atlas.setColor(Color.BLACK);
 		atlas.fillRectangle(0, 8, 8, 8);
 		atlas.fillRectangle(8, 0, 8, 8);
-		spriteMap.put(new Identifier("missing"), new Sprite(TextureBlend.SOILD, new TexReg(0, 0, TEXTURE_SIZE/(float)width, TEXTURE_SIZE/(float)height), new Identifier("missing"), false));
+		spriteMap.put(new Identifier("missing"), new Sprite(TextureBlend.SOLID, new TexReg(0, 0, TEXTURE_SIZE/(float)width, TEXTURE_SIZE/(float)height), new Identifier("missing"), false));
 		isFilled[0][0] = true;
 		x++;
 		
@@ -139,7 +139,7 @@ class TextureMaker {
 	
 	/** Create a new Texture Region. The parameters are just index like a tile position. */
 	private Sprite newSprite(Identifier id, Pixmap pixmap, boolean isAnimated, int width, int height, int x, int y) {
-		var blend = TextureBlend.SOILD;
+		var blend = TextureBlend.SOLID;
 		
 		for (int u = 0; u < pixmap.getWidth(); u++)
 		for (int v = 0; v < pixmap.getHeight(); v++) {
