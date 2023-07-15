@@ -96,7 +96,7 @@ public class Mod implements ModData {
 				
 				version = loader.getString("version", "");
 			} else if ((entry = zip.getEntry("fabric.mod.json")) != null) { // Fabric
-				type = ModType.FABIC;
+				type = ModType.FABRIC;
 				var value = new JsonReader().parse(new BufferedInputStream(zip.getInputStream(entry), bytes.array()));
 				
 				title = Util.unescapeJavaString(value.getString("name", value.getString("id", file.nameWithoutExtension())));

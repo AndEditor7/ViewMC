@@ -24,7 +24,6 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.math.GridPoint3;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.Null;
 import com.badlogic.gdx.utils.ObjectSet;
 
@@ -98,7 +97,7 @@ public class WorldRenderer implements Renderer {
 			}
 			
 			if (!mesh.pass(chunkPos, 0) && culling.canRender(mesh.x, mesh.y, mesh.z)) {
-				if (!mesh.isEmpty(RenderLayer.SOILD)) {
+				if (!mesh.isEmpty(RenderLayer.SOLID)) {
 					soildToRender.add(mesh);
 				}
 				if (!mesh.isEmpty(RenderLayer.TRANS)) {
@@ -137,7 +136,7 @@ public class WorldRenderer implements Renderer {
 		
 		textureToAnimate.clear();
 		for (var mesh : soildToRender) {
-			mesh.getTextures(RenderLayer.SOILD, textureToAnimate);
+			mesh.getTextures(RenderLayer.SOLID, textureToAnimate);
 		}
 		for (var mesh : transToRender) {
 			mesh.getTextures(RenderLayer.TRANS, textureToAnimate);
@@ -156,12 +155,12 @@ public class WorldRenderer implements Renderer {
 		
 //		camera.fieldOfView = 70;
 		
-		renderer.enable(RenderLayer.SOILD);
+		renderer.enable(RenderLayer.SOLID);
 		for (int i = 0; i < soildToRender.size; i++) {
-			soildToRender.get(i).render(shader, RenderLayer.SOILD);
+			soildToRender.get(i).render(shader, RenderLayer.SOLID);
 		}
 		soildToRender.clear();
-		renderer.disable(RenderLayer.SOILD);
+		renderer.disable(RenderLayer.SOLID);
 		
 		renderer.enable(RenderLayer.TRANS);
 		for (int i = 0; i < transToRender.size; i++) {
@@ -193,7 +192,7 @@ public class WorldRenderer implements Renderer {
 					}
 				} catch (Exception e) {
 					System.err.println("Error chunk mesh at " + task.mesh);
-					e.printStackTrace();
+					e.getCause().printStackTrace();
 				}
 				
 				built++;

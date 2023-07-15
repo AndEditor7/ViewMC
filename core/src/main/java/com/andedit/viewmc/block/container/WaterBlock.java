@@ -2,11 +2,8 @@ package com.andedit.viewmc.block.container;
 
 import java.util.Collection;
 
-import com.andedit.viewmc.block.Block;
-import com.andedit.viewmc.block.BlockModel;
+import com.andedit.viewmc.block.*;
 import com.andedit.viewmc.block.BlockModel.Quad;
-import com.andedit.viewmc.block.BlockState;
-import com.andedit.viewmc.block.TextureAtlas;
 import com.andedit.viewmc.graphic.MeshProvider;
 import com.andedit.viewmc.resource.blockmodel.BlockModelJson;
 import com.andedit.viewmc.resource.blockstate.BlockStateJson;
@@ -35,7 +32,12 @@ public class WaterBlock extends Block {
 		cube.regAll(sprite);
 		cube.forEach(this::quad);
 	}
-	
+
+	@Override
+	public BlockRenderer getRenderer(BlockView view, BlockState state, int x, int y, int z) {
+		return view.getBlockstate(x, y+1, z).isWaterlogged() ? fullModel : haftModel;
+	}
+
 	protected BlockModel newBlockModel() {
 		return new BlockModel();
 	}
@@ -56,21 +58,6 @@ public class WaterBlock extends Block {
 	}
 	
 	@Override
-	public void build(MeshProvider provider, BlockView view, BlockState state, int x, int y, int z) {
-		getModel(view, x, y, z).build(provider, view, state, x, y, z);
-	}
-
-	@Override
-	public void getQuads(Collection<Quad> list, BlockView view, BlockState state, int x, int y, int z) {
-		
-	}
-
-	@Override
-	public void getBoxes(Collection<BoundingBox> list, BlockView view, BlockState state, int x, int y, int z) {
-		
-	}
-	
-	@Override
 	public boolean canRender(BlockState primary, BlockState secondary, Quad quad, @Null Facing face, Cull cull, int x, int y, int z) {
 		if (secondary.isWaterlogged()) {
 			return false;
@@ -80,16 +67,7 @@ public class WaterBlock extends Block {
 	}
 	
 	@Override
-	public boolean isFullOpaque(BlockView view, BlockState state, int x, int y, int z) {
-		return false;
-	}
-	
-	@Override
 	public boolean isWaterLogged(BlockState state) {
 		return true;
-	}
-	
-	protected BlockModel getModel(BlockView view, int x, int y, int z) {
-		return view.getBlockstate(x, y+1, z).isWaterlogged() ? fullModel : haftModel;
 	}
 }

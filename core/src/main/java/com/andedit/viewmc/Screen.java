@@ -8,8 +8,6 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 public interface Screen extends Disposable, Event {
 	void show();
 	
-	void hide();
-	
 	void render();
 	
 	void resize(Viewport view);

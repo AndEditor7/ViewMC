@@ -4,7 +4,6 @@ import static com.badlogic.gdx.Gdx.files;
 
 import com.andedit.viewmc.Assets;
 import com.andedit.viewmc.Events;
-import com.andedit.viewmc.Main;
 import com.andedit.viewmc.MenuCore;
 import com.andedit.viewmc.loader.ModType;
 import com.andedit.viewmc.resource.ModData;
@@ -20,13 +19,11 @@ import com.andedit.viewmc.util.Fonts;
 import com.andedit.viewmc.util.Util;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Null;
-import com.badlogic.gdx.utils.Scaling;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
 public class ModsUI extends BaseUI {
@@ -161,7 +158,7 @@ public class ModsUI extends BaseUI {
 			text.append('\n');
 		}
 		
-		if (data.getType() == ModType.FABIC) {
+		if (data.getType() == ModType.FABRIC) {
 			if (!data.getAuthors().isEmpty() || !data.getContributors().isEmpty()) {
 				text.append("[#ffffff]").append("Credits:\n");
 				for (var name : data.getAuthors()) {

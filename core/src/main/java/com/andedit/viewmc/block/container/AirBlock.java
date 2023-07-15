@@ -4,10 +4,17 @@ import java.util.Collection;
 
 import com.andedit.viewmc.block.Block;
 import com.andedit.viewmc.block.BlockModel.Quad;
+import com.andedit.viewmc.block.BlockRenderers;
 import com.andedit.viewmc.block.BlockState;
+import com.andedit.viewmc.block.TextureAtlas;
 import com.andedit.viewmc.graphic.MeshProvider;
+import com.andedit.viewmc.resource.blockmodel.BlockModelJson;
+import com.andedit.viewmc.resource.blockstate.BlockStateJson;
+import com.andedit.viewmc.util.Identifier;
+import com.andedit.viewmc.util.ModelSupplier;
 import com.andedit.viewmc.world.BlockView;
 import com.badlogic.gdx.math.collision.BoundingBox;
+import com.badlogic.gdx.utils.OrderedMap;
 
 public class AirBlock extends Block {
 	
@@ -16,26 +23,12 @@ public class AirBlock extends Block {
 	{
 		state = new BlockState(this);
 		id = "minecraft:air";
+		renderers = BlockRenderers.BLANK;
 	}
 
 	@Override
-	public void build(MeshProvider builder, BlockView view, BlockState state, int x, int y, int z) {
-
-	}
-
-	@Override
-	public void getQuads(Collection<Quad> list, BlockView view, BlockState state, int x, int y, int z) {
-
-	}
-
-	@Override
-	public void getBoxes(Collection<BoundingBox> list, BlockView view, BlockState state, int x, int y, int z) {
-
-	}
-	
-	@Override
-	public boolean isFullOpaque(BlockView view, BlockState state, int x, int y, int z) {
-		return false;
+	protected BlockRenderers getRenderers(BlockStateJson state, ModelSupplier supplier) {
+		return BlockRenderers.BLANK;
 	}
 
 	@Override

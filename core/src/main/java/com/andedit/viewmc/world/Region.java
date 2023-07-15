@@ -139,7 +139,7 @@ public class Region {
 		chunkX >>= 5;
 		chunkZ >>= 5;
 		final int rad = (WorldRenderer.RADIUS_H + World.DELETE_CHUNK_OFFSET) >> 5;
-		if (x+1 < (-rad)+chunkX 
+		if (x+1 < (-rad)+chunkX
 		|| z+1 < (-rad)+chunkZ 
 		|| x-1 > rad+chunkX 
 		|| z-1 > rad+chunkZ) {
@@ -152,7 +152,7 @@ public class Region {
 		return this.x == x && this.z == z;
 	}
 	
-	public void load(FileHandle file, Resources blocks) throws Exception {
+	public void load(FileHandle file, Resources resources) throws Exception {
 		try (var raf = new RandomAccessFile(file.file(), "r")) {
 			for (int i = 0; i < 1024; i++) {
 				raf.seek(i * 4);
@@ -162,9 +162,8 @@ public class Region {
 				if (raf.readByte() == 0) {
 					continue;
 				}
-				raf.seek(4096 * offset + 4); //+4: skip data size
-				var chunk = new Chunk(raf, blocks, (i & 31) + (x>>4), (i >> 5) + (z>>4));
-				chunk.init(world);
+				raf.seek(4096L * offset + 4); //+4: skip data size
+				var chunk = new Chunk(raf, world, resources, (i & 31) + (x>>4), (i >> 5) + (z>>4));
 				chunks.set(i, chunk);
 			}
 		}

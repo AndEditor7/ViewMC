@@ -11,6 +11,7 @@ import com.andedit.viewmc.util.Facing;
 import com.andedit.viewmc.util.Identifier;
 import com.andedit.viewmc.util.ModelSupplier;
 import com.andedit.viewmc.world.BlockView;
+import com.badlogic.gdx.utils.Null;
 import com.badlogic.gdx.utils.OrderedMap;
 
 public class LeavesBlock extends Block {
@@ -24,21 +25,17 @@ public class LeavesBlock extends Block {
 		return new ModelSupplier(blockModels, textures) {
 			@Override
 			public BlockModel config(Identifier id, BlockModel model) {
-				for (var quad : model.quads) {
-					quad.allowRender = true;
-				}
+				//for (var quad : model.quads) {
+				//	quad.allowRender = true;
+				//}
+				model.isFullOpaque = true;
 				return model;
 			}
 		};
 	}
 	
 	@Override
-	public boolean isFullOpaque(BlockView view, BlockState state, int x, int y, int z) {
-		return true;
-	}
-	
-	@Override
-	public boolean canRender(BlockState primary, BlockState secondary, Quad quad, Facing face, Cull cull, int x, int y, int z) {
+	public boolean canRender(BlockState primary, @Null BlockState secondary, Quad quad, @Null Facing face, Cull cull, int x, int y, int z) {
 		return cull.isRenderable();
 	}
 }

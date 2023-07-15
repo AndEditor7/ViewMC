@@ -25,7 +25,8 @@ public class Section19 extends Section {
 	private final long[] biomes;
 	private final int biomeBits;
 	
-	public Section19(Resources resources, CompoundTag data) {
+	public Section19(Chunk chunk, Resources resources, CompoundTag data) {
+		super(chunk);
 		this.y = data.getNumber("Y").byteValue();
 		this.blockLight = data.getByteArray("BlockLight");
 		this.skyLight = data.getByteArray("SkyLight");

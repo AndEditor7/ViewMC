@@ -54,12 +54,6 @@ public class GameCore implements Screen {
 	}
 	
 	@Override
-	public void hide() {
-		main.setCatched(false);
-		dispose();
-	}
-	
-	@Override
 	public void event(Events event, Object obj) {
 		
 	}
@@ -108,6 +102,7 @@ public class GameCore implements Screen {
 
 	@Override
 	public void dispose() {
+		main.setCatched(false);
 		render.dispose();
 	}
 }

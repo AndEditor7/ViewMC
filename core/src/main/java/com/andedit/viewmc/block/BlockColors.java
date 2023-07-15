@@ -1,7 +1,6 @@
 package com.andedit.viewmc.block;
 
 import com.andedit.viewmc.util.Util;
-import com.andedit.viewmc.world.BlockRenderView;
 import com.andedit.viewmc.world.BlockView;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.MathUtils;
@@ -12,32 +11,18 @@ import com.badlogic.gdx.utils.ObjectMap;
 public class BlockColors {
 	
 	private static final Vector3[] COLORS = Util.make(new Vector3[16], colors -> {
-        for (int i = 0; i <= 15; ++i) {
-            float f = 0;
-            float r = f * 0.6f + ((f = (float)i / 15.0f) > 0.0f ? 0.4f : 0.3f);
-            float g = MathUtils.clamp(f * f * 0.7f - 0.5f, 0.0f, 1.0f);
-            float b = MathUtils.clamp(f * f * 0.6f - 0.7f, 0.0f, 1.0f);
-            colors[i] = new Vector3(r, g, b);
-        }
+		colors[0] = new Vector3();
     });
 	
 	private static final ObjectMap<String, BlockColorProvider> MAP = new ObjectMap<>();
 	
 	static {
 		register((state, view, x, y, z, index) -> {
-			if (view instanceof BlockRenderView renderView ) {
-				return renderView.getGrassColor(x, state.get("half").equals("upper") ? y-1 : y, z);
-			}
-            return 0x79C05A;
+            return view.getGrassColor(x, state.get("half").equals("upper") ? y-1 : y, z);
         }, "large_fern", "tall_grass");
 		
-        //blockColors.registerColorProperty(TallPlantBlock.HALF, Blocks.LARGE_FERN, Blocks.TALL_GRASS);
-		
         register((state, view, x, y, z, index) -> {
-        	if (view instanceof BlockRenderView renderView ) {
-        		return renderView.getGrassColor(x, y, z);
-        	}
-            return 0x79C05A;
+            return view.getGrassColor(x, y, z);
         }, "grass_block", "fern", "grass", "potted_fern");
         
         register((state, view, x, y, z, index) -> 0x619961, "spruce_leaves");
@@ -45,14 +30,11 @@ public class BlockColors {
         register((state, view, x, y, z, index) -> 8431445, "birch_leaves");
         
         register((state, view, x, y, z, index) -> {
-        	if (view instanceof BlockRenderView renderView ) {
-        		return renderView.getFoliageColor(x, y, z);
-        	}
-            return 0x59AE30;
+            return view.getFoliageColor(x, y, z);
         }, "oak_leaves", "jungle_leaves", "acacia_leaves", "dark_oak_leaves", "vine", "mangrove_leaves");
         
         register((state, view, x, y, z, index) -> {
-            return -1; // BiomeColors.getWaterColor(world, pos);
+            return view.getBiome(x, y, z).waterColor;
         }, "water", "bubble_column", "water_cauldron");
         
         register((state, view, x, y, z, index) -> {
@@ -60,13 +42,8 @@ public class BlockColors {
         	return Color.rgb888(col.x, col.y, col.z);
         }, "redstone_wire");
         
-        //blockColors.registerColorProperty(RedstoneWireBlock.POWER, Blocks.REDSTONE_WIRE);
-        
         register((state, view, x, y, z, index) -> {
-        	if (view instanceof BlockRenderView renderView) {
-        		return renderView.getGrassColor(x, y, z);
-        	}
-            return 0x79C05A;
+            return view.getGrassColor(x, y, z);
         }, "sugar_cane");
         
         register((state, view, x, y, z, index) -> 14731036, "attached_melon_stem", "attached_pumpkin_stem");
@@ -80,11 +57,11 @@ public class BlockColors {
             
         }, "melon_stem", "pumpkin_stem");
         
-        //blockColors.registerColorProperty(StemBlock.AGE, Blocks.MELON_STEM, Blocks.PUMPKIN_STEM);
-        
         register((state, view, x, y, z, index) -> {
-            return 0x3f76e4;
+            return view.getBiome(x, y, z).waterColor;
         }, "water");
+
+		register((state, view, x, y, z, index) -> 0x208030, "lily_pad");
 	}
 	
 	private static void register(BlockColorProvider provider, String... blocks) {

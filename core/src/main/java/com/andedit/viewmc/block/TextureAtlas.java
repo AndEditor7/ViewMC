@@ -24,7 +24,7 @@ import java.util.Comparator;
 
 /**
  * The Block Texture Atlas. It contains all block textures in the texture sheet
- * loaded from a resource file. The uv texture coordinate can be obtained by a
+ * loaded from a resource file. The uv texture coordinate can be obtained by an
  * identifier. It also contains animated textures that updates when the update
  * method is called.
  */
@@ -42,7 +42,6 @@ public class TextureAtlas implements Disposable {
 	private final ObjectSet<Identifier> missingSet = new ObjectSet<>();
 	private final Sprite missing;
 	private TexBinder binder;
-	
 	@Null
 	private Texture texture;
 	private float time = 0;
@@ -88,7 +87,7 @@ public class TextureAtlas implements Disposable {
 			var maker = new TextureMaker(width, height);
 			atlas = maker.atlas;
 			spriteMap = maker.build(assets, pixList, animated, this, progress);
-			missing = spriteMap.get(new Identifier("missing"));
+			missing = spriteMap.get(Identifier.MISSING);
 			animatedMap = new ObjectMap<>(animated.size);
 			animated.forEach(a->animatedMap.put(a.id, a));
 		} catch (Exception e) {

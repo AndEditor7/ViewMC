@@ -46,7 +46,7 @@ class TextureMaker {
 		atlas.setColor(Color.BLACK);
 		atlas.fillRectangle(0, 8, 8, 8);
 		atlas.fillRectangle(8, 0, 8, 8);
-		spriteMap.put(new Identifier("missing"), new Sprite(TextureBlend.SOLID, new TexReg(0, 0, TEXTURE_SIZE/(float)width, TEXTURE_SIZE/(float)height), new Identifier("missing"), false));
+		spriteMap.put(Identifier.MISSING, new Sprite(TextureBlend.SOLID, new TexReg(0, 0, TEXTURE_SIZE/(float)width, TEXTURE_SIZE/(float)height), new Identifier("missing"), false));
 		isFilled[0][0] = true;
 		x++;
 		

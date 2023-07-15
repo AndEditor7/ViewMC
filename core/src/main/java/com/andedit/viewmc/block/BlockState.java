@@ -22,7 +22,6 @@ public class BlockState {
 	public final Block block;
 	
 	private final ObjectMap<String, String> props;
-	private OptionalInt propsHashcode;
 	
 	public BlockState(Block block) {
 		this(block, EmptyMap.instance());
@@ -72,21 +71,22 @@ public class BlockState {
 	public boolean contains(String key) {
 		return props.containsKey(key);
 	}
-	
-	public void build(MeshProvider builder, BlockView view, int x, int y, int z) {
-		block.build(builder, view, this, x, y, z);
+
+	public void build(MeshProvider provider, BlockView view, int x, int y, int z) {
+		block.getRenderer(view, this, x, y, z).build(provider, view, this, x, y, z);
 	}
-	
+
 	public void getQuads(Collection<Quad> collection, BlockView view, int x, int y, int z) {
-		block.getQuads(collection, view, this, x, y, z);
+		block.getRenderer(view, this, x, y, z).getQuads(collection, view, this, x, y, z);
 	}
-	
+
 	public void getBoxes(Collection<BoundingBox> collection, BlockView view, int x, int y, int z) {
-		block.getBoxes(collection, view, this, x, y, z);
+		block.getRenderer(view, this, x, y, z).getBoxes(collection, view, this, x, y, z);
 	}
-	
+
+	/** Is full cube and opaque. Used for ambient occlusion. */
 	public boolean isFullOpaque(BlockView view, int x, int y, int z) {
-		return block.isFullOpaque(view, this, x, y, z);
+		return block.getRenderer(view, this, x, y, z).isFullOpaque(view, this, x, y, z);
 	}
 	
 	public boolean canRender(BlockState secondary, Quad quad, Facing face, Cull cull, int x, int y, int z) {

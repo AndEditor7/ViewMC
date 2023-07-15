@@ -125,11 +125,6 @@ public class MakerCore implements Screen {
 	public void resize(Viewport view) {
 		manager.resize(view);
 	}
-	
-	@Override
-	public void hide() {
-		dispose();
-	}
 
 	@Override
 	public void dispose() {

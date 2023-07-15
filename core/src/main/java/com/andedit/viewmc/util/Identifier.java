@@ -1,6 +1,9 @@
 package com.andedit.viewmc.util;
 
 public final class Identifier {
+
+	public static final Identifier MISSING = new Identifier("missing");
+
 	public final String name, path, full;
 	
 	public Identifier(String string) {

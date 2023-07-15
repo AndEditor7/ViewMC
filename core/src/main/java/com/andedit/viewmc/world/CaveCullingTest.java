@@ -66,7 +66,7 @@ public class CaveCullingTest {
 			}
 			
 			var step = getNodeStep(node);
-			if (step > RADIUS_H * 2) continue;
+			if (step > RADIUS_H * 2.5f) continue;
 			
 			for (var face : faces) {
 				if (isBlocked(node, face)) continue;

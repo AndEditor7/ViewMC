@@ -12,6 +12,6 @@ public enum TextureBlend {
 	}
 	
 	public RenderLayer getRenderLayer() {
-		return this == TRANSLUCENT ? RenderLayer.TRANS : RenderLayer.SOILD;
+		return this == TRANSLUCENT ? RenderLayer.TRANS : RenderLayer.SOLID;
 	}
 }

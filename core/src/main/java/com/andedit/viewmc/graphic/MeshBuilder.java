@@ -118,6 +118,11 @@ public class MeshBuilder implements VertConsumer {
 	}
 
 	@Override
+	public void nor(float x, float y, float z) {
+		
+	}
+
+	@Override
 	public void uv(float u, float v) {
 		array.add(uOffset + uScale * u, vOffset + vScale * v);
 	}

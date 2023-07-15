@@ -5,12 +5,12 @@ import com.andedit.viewmc.biome.Biomes;
 import com.andedit.viewmc.block.BlockState;
 import com.andedit.viewmc.block.container.AirBlock;
 import com.andedit.viewmc.resource.Resources;
-import com.andedit.viewmc.world.BlockRenderView;
 
+import com.andedit.viewmc.world.BlockView;
 import net.querz.nbt.io.NamedTag;
 import net.querz.nbt.tag.CompoundTag;
 
-public class Structure implements BlockRenderView {
+public class Structure implements BlockView {
 	
 	private final short[][][] data;
 	private final BlockState[] blocks;

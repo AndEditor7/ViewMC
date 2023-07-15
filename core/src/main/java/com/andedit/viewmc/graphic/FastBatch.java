@@ -3,7 +3,6 @@ package com.andedit.viewmc.graphic;
 import static com.badlogic.gdx.graphics.GL20.GL_ELEMENT_ARRAY_BUFFER;
 
 import com.andedit.viewmc.graphic.vertex.VertBuf;
-import com.andedit.viewmc.graphic.vertex.VertContext;
 import com.andedit.viewmc.graphic.vertex.Vertex;
 import com.andedit.viewmc.util.Util;
 import com.badlogic.gdx.Gdx;

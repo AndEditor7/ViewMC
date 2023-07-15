@@ -1,5 +1,5 @@
 package com.andedit.viewmc.world;
 
-public interface WorldView extends BlockRenderView {
+public interface WorldView extends BlockView {
 	
 }

@@ -72,11 +72,6 @@ public class ViewCore implements Screen {
 	}
 
 	@Override
-	public void hide() {
-		dispose();
-	}
-
-	@Override
 	public void render() {
 		ScreenUtils.clear(0.15f, 0.15f, 0.15f, 1f, true);
 		manager.update();

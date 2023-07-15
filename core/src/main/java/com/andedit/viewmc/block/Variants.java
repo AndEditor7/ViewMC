@@ -14,7 +14,7 @@ import com.andedit.viewmc.util.Util;
 import com.andedit.viewmc.world.BlockView;
 import com.badlogic.gdx.math.collision.BoundingBox;
 
-public class Variants implements BlockLike {
+public class Variants implements BlockRenderers {
 	
 	public final List<Variant> variants;
 	
@@ -27,50 +27,17 @@ public class Variants implements BlockLike {
 	}
 
 	@Override
-	public void build(MeshProvider provider, BlockView view, BlockState state, int x, int y, int z) {
+	public BlockRenderer getRenderer(BlockView view, BlockState state, int x, int y, int z) {
 		for (int i = 0; i < variants.size(); i++) {
 			var variant = variants.get(i);
 			if (variant.test(state)) {
-				variant.build(provider, view, state, x, y, z);
-				return;
+				return variant;
 			}
 		}
+		return null;
 	}
 
-	@Override
-	public void getQuads(Collection<Quad> collection, BlockView view, BlockState state, int x, int y, int z) {
-		for (int i = 0; i < variants.size(); i++) {
-			var variant = variants.get(i);
-			if (variant.test(state)) {
-				variant.getQuads(collection, view, state, x, y, z);
-				return;
-			}
-		}
-	}
-
-	@Override
-	public void getBoxes(Collection<BoundingBox> collection, BlockView view, BlockState state, int x, int y, int z) {
-		for (int i = 0; i < variants.size(); i++) {
-			var variant = variants.get(i);
-			if (variant.test(state)) {
-				variant.getBoxes(collection, view, state, x, y, z);
-				return;
-			}
-		}
-	}
-	
-	@Override
-	public boolean isFullOpaque(BlockView view, BlockState state, int x, int y, int z) {
-		for (int i = 0; i < variants.size(); i++) {
-			var variant = variants.get(i);
-			if (variant.test(state)) {
-				return variant.isFullOpaque(view, state, x, y, z);
-			}
-		}
-		return false;
-	}
-	
-	private static class Variant implements Predicate<BlockState>, BlockLike {
+	private static class Variant implements Predicate<BlockState>, BlockRenderer {
 		final ArrayList<Predicate<BlockState>> cases = new ArrayList<>();
 		final Weighted<BlockModel> models = new Weighted<BlockModel>();
 		

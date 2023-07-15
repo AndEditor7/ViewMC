@@ -21,7 +21,7 @@ public class TexReg {
 		this.v2 = v2;
 	}
 	
-	/** To libGDX"s TextureRegion. */
+	/** To libGDX's TextureRegion. */
 	public TextureRegion toGdxTR(Texture texture) {
 		return new TextureRegion(texture, u1, v1, u2, v2);
 	}

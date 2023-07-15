@@ -33,7 +33,6 @@ public class Main extends ApplicationAdapter {
 
 	public static API api;
 	public static NativeFileChooser fc;
-	public static Array<Runnable> postInits = new Array<Runnable>();
 
 	public StageUI stage;
 	
@@ -74,15 +73,6 @@ public class Main extends ApplicationAdapter {
 		Statics.init();
 		Assets.init();
 		
-		postInits.forEach(Runnable::run);
-		postInits.clear();
-		
-		try {
-			//setScreen(new GameCore(new ResourceLoader(files).call()));
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-		
 		packer = new ResourcePacker();
 		setScreen(new MenuCore());
 	}
@@ -100,7 +90,7 @@ public class Main extends ApplicationAdapter {
 		if (newScreen == null) return;
 		
 		if (screen != null) {
-			screen.hide();
+			screen.dispose();
 		}
 		
 		screen = newScreen;

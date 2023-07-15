@@ -26,11 +26,6 @@ public class LoaderCore<T> implements Screen {
 	}
 	
 	@Override
-	public void hide() {
-		
-	}
-	
-	@Override
 	public void event(Events event, Object obj) {
 		
 	}

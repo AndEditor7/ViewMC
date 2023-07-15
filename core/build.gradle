@@ -3,9 +3,9 @@ eclipse.project.name = appName + '-core'
 
 dependencies {
 	api "com.badlogicgames.gdx:gdx:$gdxVersion"
-	api 'com.github.Querz:NBT:6.1'
-	api 'com.github.tommyettinger:anim8-gdx:0.3.14'
-	api 'com.moandjiezana.toml:toml4j:0.7.2'
+	api "com.github.Querz:NBT:$NBTversion"
+	api "com.github.tommyettinger:anim8-gdx:$anim8version"
+	api "com.moandjiezana.toml:toml4j:$toml4jVresion"
 	api fileTree(dir: 'jars', include: '*.jar')
-	api "games.spooky.gdx:gdx-nativefilechooser:2.2.0"
+	api "games.spooky.gdx:gdx-nativefilechooser:$NFCversion"
 }

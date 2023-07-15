@@ -5,20 +5,20 @@ import com.andedit.viewmc.block.BlockState;
 import com.andedit.viewmc.resource.Resources;
 import com.andedit.viewmc.util.Facing;
 
-public abstract class Section implements BlockRenderView {
+public abstract class Section implements BlockView {
 	public static final int SIZE = 16;
 	public static final int MASK = SIZE-1;
 
-	protected volatile World world;
-	protected volatile Chunk chunk;
+	protected final World world;
+	protected final Chunk chunk;
 	
 	public boolean isDirty = true;
 	
 	int graph = -1;
 	int steps = 1;
 	
-	public void init(World world, Chunk chunk) {
-		this.world = world;
+	public Section(Chunk chunk) {
+		this.world = chunk.world;
 		this.chunk = chunk;
 	}
 	

@@ -36,7 +36,7 @@ public class ChunkLoaderTask implements Runnable {
 				var chunkToLoad = array[i];
 				if (chunkToLoad.isCancelled) continue;
 				
-				raf.seek(chunkToLoad.toIndex() * 4);
+				raf.seek(chunkToLoad.toIndex() * 4L);
 				int offset = raf.read() << 16;
 				offset |= (raf.read() & 0xFF) << 8;
 				offset |= raf.read() & 0xFF;
@@ -45,9 +45,9 @@ public class ChunkLoaderTask implements Runnable {
 					continue;
 				}
 				
-				raf.seek(4096 * offset + 4); //+4: skip data size
+				raf.seek(4096L * offset + 4); //+4: skip data size
 				
-				var chunk = new Chunk(raf, world.resources, chunkToLoad.worldX, chunkToLoad.worldZ);
+				var chunk = new Chunk(raf, world, world.resources, chunkToLoad.worldX, chunkToLoad.worldZ);
 				if (progress != null) {
 					progress.incStep();
 				}

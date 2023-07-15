@@ -3,7 +3,7 @@ package com.andedit.viewmc.loader;
 public enum ModType {
 	VANILLA("Vanilla"), 
 	FORGE("Forge"), 
-	FABIC("Fabric"), 
+	FABRIC("Fabric"),
 	QUILT("Quilt");
 	
 	private final String name;

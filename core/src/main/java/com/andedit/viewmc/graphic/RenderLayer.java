@@ -1,7 +1,7 @@
 package com.andedit.viewmc.graphic;
 
 public enum RenderLayer {
-	SOILD, TRANS;
+	SOLID, TRANS;
 	
 	public static final RenderLayer[] VALUES = RenderLayer.values();
 }

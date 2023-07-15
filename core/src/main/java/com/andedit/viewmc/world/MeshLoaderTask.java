@@ -31,7 +31,7 @@ public class MeshLoaderTask implements Callable<Void> {
 				var state = section.getBlockstateAt(x, y, z);
 				state.build(provider, section, xPos+x, yPos+y, zPos+z);
 				if (state.isWaterlogged() && state.block != water) {
-					water.build(provider, section, water.getState(), xPos+x, yPos+y, zPos+z);
+					water.getState().build(provider, section, xPos+x, yPos+y, zPos+z);
 				}
 			}
 		}

@@ -64,7 +64,8 @@ public class StructureRenderer implements MakerRenderer {
 			var state = structure.getBlockstate(x, y, z);
 			state.build(provider, structure, x, y, z);
 			if (state.isWaterlogged() && state.block != water) {
-				water.build(provider, structure, water.getState(), x, y, z);
+				var renderer = water.getRenderer(structure, water.getState(), x, y, z);
+				renderer.build(provider, structure, water.getState(), x, y, z);
 			}
 		}
 		
@@ -122,9 +123,9 @@ public class StructureRenderer implements MakerRenderer {
 		shader.setUniformf("u_flip", flip?1:0);
 		shader.setUniformi("u_texture", resources.getTextureUnit());
 		
-		render.enable(RenderLayer.SOILD);
-		mesh.render(shader, RenderLayer.SOILD);
-		render.disable(RenderLayer.SOILD);
+		render.enable(RenderLayer.SOLID);
+		mesh.render(shader, RenderLayer.SOLID);
+		render.disable(RenderLayer.SOLID);
 		
 		render.enable(RenderLayer.TRANS);
 		mesh.render(shader, RenderLayer.TRANS);

@@ -36,7 +36,7 @@ import com.badlogic.gdx.utils.Null;
 // |       |
 // |       |
 // v4-----v1
-public class BlockModel implements BlockLike, Iterable<Quad> {
+public class BlockModel implements BlockRenderer, Iterable<Quad> {
 	
 	/** tolerance */
 	private static final float T = 0.001f;
@@ -47,7 +47,7 @@ public class BlockModel implements BlockLike, Iterable<Quad> {
 	/** ambient occlusion */
 	public boolean ao = true;
 	
-	private boolean isFullOpaque;
+	public boolean isFullOpaque;
 	
 	public BlockModel() {
 		
@@ -254,7 +254,7 @@ public class BlockModel implements BlockLike, Iterable<Quad> {
 		private @Null Identifier texAnimated;
 		
 		private @Null Facing face;
-		private RenderLayer layer = RenderLayer.SOILD;
+		private RenderLayer layer = RenderLayer.SOLID;
 		private boolean culling = true;
 		private boolean borderCollide;
 		
@@ -297,7 +297,7 @@ public class BlockModel implements BlockLike, Iterable<Quad> {
 		public void build(BlockView view, MeshProvider provider, BlockState state, int x, int y, int z) {
 			List<Quad> quads = provider.quads;
 			quads.clear();
-			
+
 			@Null
 			BlockState nState = face == null ? null : view.getBlockstate(x+face.xOffset, y+face.yOffset, z+face.zOffset);
 			if (borderCollide && culling) {
@@ -310,17 +310,8 @@ public class BlockModel implements BlockLike, Iterable<Quad> {
 			}
 		}
 		
-		public void getQuads(Collection<Quad> collection) {
-			collection.add(this);
-		}
-		
-		public void getBoxes(Collection<BoundingBox> collection) {
-			if (isAlign) 
-			collection.add(box);
-		}
-		
-		/** Test for whether this quad is'nt blocked by the quads. */
-		Cull canRender(List<Quad> quads) {
+		/** Test for whether this quad isn't blocked by the quads. */
+		private Cull canRender(List<Quad> quads) {
 			var boxA = box;
 			float areaCoveredAll = 0, areaCovered = 0;
 			for (int i=0,s=quads.size(); i < s; i++) {
@@ -367,14 +358,14 @@ public class BlockModel implements BlockLike, Iterable<Quad> {
 			return areaCoveredAll > 1f-T ? Cull.CULLED_BUT_RENDERBALE : Cull.RENDERABLE;
 		}
 		
-		void render(BlockView view, MeshProvider provider, BlockState state, int x, int y, int z) {
+		private void render(BlockView view, MeshProvider provider, BlockState state, int x, int y, int z) {
 			final float xf = x, yf = y, zf = z;
 			final var builder = provider.getBuilder(layer);
 			builder.setColor(tintIndex == -1 ? Color.WHITE_FLOAT_BITS : BlockColors.getColorFloat(state, view, x, y, z, tintIndex));
 			float shadeLight = shade ? Lighting.getShade(face) : 1;
 			
 			// ambient occlusion mode
-			if (shade && ao && face != null) {
+			if (provider.useLighting && shade && ao && face != null) {
 				var lighting = provider.lighting;
 				var upFace = face.getUpFace();
 				var rightFace = face.getRightFace();
@@ -423,7 +414,7 @@ public class BlockModel implements BlockLike, Iterable<Quad> {
 		}
 		
 		/** Get face offset value for lighting */
-		int getOffset(Axis axis) {
+		private int getOffset(Axis axis) {
 			return face != null && borderCollide ? face.offsetValue(axis) : 0;
 		}
 		
@@ -447,14 +438,14 @@ public class BlockModel implements BlockLike, Iterable<Quad> {
 			};
 		}
 		
-		void setSprite(Sprite sprite) {
+		private void setSprite(Sprite sprite) {
 			layer = sprite.blend.getRenderLayer();
 			allowRender = sprite.blend != TextureBlend.SOLID;
 			blend = sprite.blend;
 			texAnimated = sprite.isAnimated ? sprite.id : null;
 		}
 		
-		Quad reg(Sprite sprite, @Null UV uv) {
+		private Quad reg(Sprite sprite, @Null UV uv) {
 			setSprite(sprite);
 			
 			if (uv == null) {

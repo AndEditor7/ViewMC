@@ -125,8 +125,7 @@ public class World implements WorldView {
 				if (chunk.pass(chunkX, chunkZ)) {
 					continue;
 				}
-				
-				chunk.init(this);
+
 				putChunk(chunk);
 			}
 		}

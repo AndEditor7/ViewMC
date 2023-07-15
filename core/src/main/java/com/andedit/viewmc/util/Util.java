@@ -135,7 +135,7 @@ public final class Util {
 	public static ArrayList<String> split(String string, char delimiter) {
 		var array = new ArrayList<String>((string.length() / 3) + 2);
 		int i = 0;
-		int j = string.indexOf(delimiter, 0); // first substring
+		int j = string.indexOf(delimiter); // first substring
 
 		while (j >= 0) {
 			array.add(string.substring(i, j));

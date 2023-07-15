@@ -11,6 +11,8 @@ public class MeshProvider {
 	private final EnumMap<RenderLayer, MeshBuilder> builders = new EnumMap<>(RenderLayer.class);
 	
 	public final Resources resources;
+
+	public boolean useLighting = true, useNormal;
 	
 	public MeshProvider(Resources resources) {
 		this(resources, MeshBuilder::new);

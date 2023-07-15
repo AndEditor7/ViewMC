@@ -18,41 +18,46 @@ public class InputHolder implements InputProcessor {
 
 	@Override
 	public boolean keyDown(int keycode) {
-		return processor == null ? false : processor.keyDown(keycode);
+		return processor != null && processor.keyDown(keycode);
 	}
 
 	@Override
 	public boolean keyUp(int keycode) {
-		return processor == null ? false : processor.keyUp(keycode);
+		return processor != null && processor.keyUp(keycode);
 	}
 
 	@Override
 	public boolean keyTyped(char character) {
-		return processor == null ? false : processor.keyTyped(character);
+		return processor != null && processor.keyTyped(character);
 	}
 
 	@Override
 	public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-		return processor == null ? false : processor.touchDown(screenX, screenY, pointer, button);
+		return processor != null && processor.touchDown(screenX, screenY, pointer, button);
 	}
 
 	@Override
 	public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-		return processor == null ? false : processor.touchUp(screenX, screenY, pointer, button);
+		return processor != null && processor.touchUp(screenX, screenY, pointer, button);
 	}
 
 	@Override
 	public boolean touchDragged(int screenX, int screenY, int pointer) {
-		return processor == null ? false : processor.touchDragged(screenX, screenY, pointer);
+		return processor != null && processor.touchDragged(screenX, screenY, pointer);
 	}
 
 	@Override
 	public boolean mouseMoved(int screenX, int screenY) {
-		return processor == null ? false : processor.mouseMoved(screenX, screenY);
+		return processor != null && processor.mouseMoved(screenX, screenY);
 	}
 
 	@Override
 	public boolean scrolled(float amountX, float amountY) {
-		return processor == null ? false : processor.scrolled(amountX, amountY);
+		return processor != null && processor.scrolled(amountX, amountY);
+	}
+
+	@Override
+	public boolean touchCancelled(int screenX, int screenY, int pointer, int button) {
+		return processor != null && processor.touchCancelled(screenX, screenY, pointer, button);
 	}
 }

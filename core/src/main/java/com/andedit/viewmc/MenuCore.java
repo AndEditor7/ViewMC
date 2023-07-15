@@ -33,11 +33,6 @@ public class MenuCore implements Screen {
 		manager.reload();
 		gl.glClearColor(20/255f, 25/255f, 35/255f, 1);
 	}
-
-	@Override
-	public void hide() {
-		dispose();
-	}
 	
 	@Override
 	public void event(Events event, Object arg) {

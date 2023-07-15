@@ -2,6 +2,7 @@ package com.andedit.viewmc.block.container;
 
 import com.andedit.viewmc.block.BlockModel;
 import com.andedit.viewmc.block.BlockModel.Quad;
+import com.andedit.viewmc.block.BlockRenderer;
 import com.andedit.viewmc.block.BlockState;
 import com.andedit.viewmc.util.Cull;
 import com.andedit.viewmc.util.Facing;
@@ -33,14 +34,14 @@ public class LavaBlock extends WaterBlock {
 		}
 		return cull.isRenderable();
 	}
-	
+
+	@Override
+	public BlockRenderer getRenderer(BlockView view, BlockState state, int x, int y, int z) {
+		return view.getBlockstate(x, y+1, z).isOf(this) ? fullModel : haftModel;
+	}
+
 	@Override
 	public boolean isWaterLogged(BlockState state) {
 		return false;
-	}
-	
-	@Override
-	protected BlockModel getModel(BlockView view, int x, int y, int z) {
-		return view.getBlockstate(x, y+1, z).isOf(this) ? fullModel : haftModel;
 	}
 }

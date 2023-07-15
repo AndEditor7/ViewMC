@@ -25,9 +25,9 @@ public class GifWriterTask implements Callable<ByteArray> {
 	@Override
 	public ByteArray call() throws Exception {
 		synchronized (writer) {
-			var ouput = new ByteArrayOutput();
-			writer.write(ouput, frames, fps);
-			return ouput.array;
+			var output = new ByteArrayOutput();
+			writer.write(output, frames, fps);
+			return output.array;
 		}
 	}
 }

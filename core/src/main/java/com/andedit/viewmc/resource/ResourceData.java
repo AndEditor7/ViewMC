@@ -37,11 +37,11 @@ public interface ResourceData extends Disposable {
 		getImage().ifPresent(Texture::dispose);
 	}
 	
-	public static Optional<Texture> loadTexture(ZipFile file, @Null ZipEntry entry) {
+	static Optional<Texture> loadTexture(ZipFile file, @Null ZipEntry entry) {
 		return loadTexture(file, entry, new ByteArrayOutput());
 	}
 	
-	public static Optional<Texture> loadTexture(ZipFile file, @Null ZipEntry entry, ByteArrayOutput bytes) {
+	static Optional<Texture> loadTexture(ZipFile file, @Null ZipEntry entry, ByteArrayOutput bytes) {
 		if (entry == null) return Optional.empty();
 		try {
 			bytes.reset();

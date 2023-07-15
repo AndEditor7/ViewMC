@@ -17,6 +17,14 @@ public interface VertConsumer {
 	default void pos(Vector3 pos) {
 		pos(pos.x, pos.y, pos.z);
 	}
+
+	/** Append normal. */
+	void nor(float x, float y, float z);
+
+	/** Append normal. */
+	default void nor(Vector3 nor) {
+		nor(nor.x, nor.y, nor.z);
+	}
 	
 	/** Append texture coordinate (UV). */
 	void uv(float u, float v);

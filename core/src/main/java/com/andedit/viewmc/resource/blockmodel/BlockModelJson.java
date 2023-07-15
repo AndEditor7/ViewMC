@@ -94,13 +94,13 @@ public class BlockModelJson {
 		String value = key;
 		do {
 			value = textureMap.get(value.substring(1));
-			if (value == null || value.equals(last)) return new Identifier("missing");
+			if (value == null || value.equals(last)) return Identifier.MISSING;
 			last = value;
 		} while (value.charAt(0) == '#');
 		return new Identifier(value);
 	}
 	
 	public boolean ambientOcclusion() {
-		return ambientOcclusion == null ? true : ambientOcclusion;
+		return ambientOcclusion == null || ambientOcclusion;
 	}
 }
